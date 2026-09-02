@@ -98,6 +98,9 @@
     @media(max-width:1180px){.building-layout{grid-template-columns:1fr}.room-card.side{min-height:160px}}
     @media(max-width:580px){.room-items{grid-template-columns:1fr}.asset-name{font-size:11px}}
 
+    /* Bildschirmhinweis auf den nächsten tatsächlichen Bewegungstermin. */
+    @media screen{.asset-tile.next-up.future{opacity:1;border:1.5px solid #d59a3a;border-style:solid;background:#fff8e9;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(189,113,0,.05)}.asset-tile.next-up.future .asset-icon{background:#a97a32}.asset-tile.next-out.present{background:linear-gradient(90deg,#f4fbf8 0%,#f4fbf8 82%,#fff0cf 100%)}.legend-swatch.next-up{opacity:1;background:#fff8e9;border:1.5px solid #d59a3a}}
+
     @media print{
       *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
       html,body{width:auto;height:auto;margin:0;background:white;color:#111;font:11pt/1.18 "Segoe UI",Arial,sans-serif}
@@ -160,7 +163,7 @@
       <div class="view-toolbar">
         <div class="date-chip"><span class="sr-only">Gewähltes Datum</span><strong id="selectedDateLabel"></strong></div>
         <div class="view-hint" id="selectedDateHint"></div><div class="spacer"></div>
-        <div class="legend" aria-label="Darstellung"><span class="legend-item"><i class="legend-swatch present"></i> fertig</span><span class="legend-item"><i class="legend-swatch due"></i> am Termin</span><span class="legend-item"><i class="legend-swatch future"></i> kommt später</span><span class="legend-item"><i class="legend-swatch overdue"></i> überfällig</span><span class="legend-item"><i class="legend-swatch conflict"></i> Konflikt</span><span class="legend-item">≈ geschätzt</span></div>
+        <div class="legend" aria-label="Darstellung"><span class="legend-item"><i class="legend-swatch present"></i> fertig</span><span class="legend-item"><i class="legend-swatch due"></i> am Termin</span><span class="legend-item"><i class="legend-swatch next-up"></i> als Nächstes</span><span class="legend-item"><i class="legend-swatch future"></i> kommt später</span><span class="legend-item"><i class="legend-swatch overdue"></i> überfällig</span><span class="legend-item"><i class="legend-swatch conflict"></i> Konflikt</span><span class="legend-item">≈ geschätzt</span></div>
       </div>
       <div class="building-layout"><div class="rooms-grid" id="mainRooms"></div><aside class="side-grid" id="sideRooms"><p class="side-label">Büros und Nebenraum</p></aside></div>
       <section class="timeline-shell" aria-label="Zeitstrahl">
@@ -172,7 +175,7 @@
 
   <section class="panel" id="panel-audit"><div class="manage-page"><div class="manage-head"><div><h2>Änderungsprotokoll</h2><p>Die jüngsten Änderungen stehen oben.</p></div></div><div class="audit-list" id="auditList"></div></div></section>
 
-  <section class="panel" id="panel-help"><div class="manage-page"><div class="manage-head"><div><h2>Bedienung</h2><p>Nur schauen — gepflegt wird der Plan zentral.</p></div></div><div class="help-grid"><article class="help-card"><h3>Zeitstrahl</h3><ul><li>Der heutige Tag kommt automatisch aus der Systemzeit des Rechners.</li><li>Mit ← und → springt man zum vorherigen oder nächsten Ereignis.</li><li>Der Schieber kann mit der Maus frei auf ein Datum gesetzt werden.</li><li>Ein Klick auf eine Ereignismarke zeigt alle Änderungen dieses Tages; die betroffenen Räume blinken kurz auf.</li></ul></article><article class="help-card"><h3>Darstellung</h3><ul><li>Grün umrandet: bestätigt vorhanden.</li><li>Gestrichelt orange: laut Plan fällig, aber noch nicht bestätigt.</li><li>Grau: kommt erst später oder Termin offen.</li><li>Dunkelorange „ÜBERFÄLLIG“: Plantermin verstrichen, Umzug nicht gemeldet.</li><li>Rot: dieselbe Ausstattung wurde widersprüchlich eingeplant.</li><li>≈ hinter einem Datum: Termin ist geschätzt, nicht bestätigt.</li></ul></article><article class="help-card"><h3>Aktualität</h3><ul><li>Der angezeigte Stand kommt aus einer zentralen Datei; oben rechts steht der Zeitpunkt der letzten Pflege.</li><li>Die Seite holt sich alle 5 Minuten und beim Zurückwechseln auf den Tab automatisch den neuesten Stand; F5 erzwingt es sofort.</li><li>Terminänderungen, erledigte Umzüge und Korrekturen bitte an Hrn. Sauter melden — er pflegt den Plan zentral, danach ist der Link für alle aktuell.</li></ul></article><article class="help-card"><h3>Drucken</h3><p>Für den Aushang ist A3 quer als gut lesbarer Standard gewählt; A4 kompakt ist oben neben „Drucken“ auswählbar. Gedruckt wird immer der gerade gewählte Stichtag mit seiner Ereignisüberschrift.</p></article></div></div></section>
+  <section class="panel" id="panel-help"><div class="manage-page"><div class="manage-head"><div><h2>Bedienung</h2><p>Nur schauen — gepflegt wird der Plan zentral.</p></div></div><div class="help-grid"><article class="help-card"><h3>Zeitstrahl</h3><ul><li>Der heutige Tag kommt automatisch aus der Systemzeit des Rechners.</li><li>Mit ← und → springt man zum vorherigen oder nächsten Ereignis.</li><li>Der Schieber kann mit der Maus frei auf ein Datum gesetzt werden.</li><li>Ein Klick auf eine Ereignismarke zeigt alle Änderungen dieses Tages; die betroffenen Räume blinken kurz auf.</li></ul></article><article class="help-card"><h3>Darstellung</h3><ul><li>Grün umrandet: bestätigt vorhanden.</li><li>Gestrichelt orange: laut Plan fällig, aber noch nicht bestätigt.</li><li>Hellorange: gehört zum nächsten tatsächlichen Bewegungstermin nach dem gewählten Datum.</li><li>Grau: kommt erst später oder Termin offen.</li><li>Dunkelorange „ÜBERFÄLLIG“: Plantermin verstrichen, Umzug nicht gemeldet.</li><li>Rot: dieselbe Ausstattung wurde widersprüchlich eingeplant.</li><li>≈ hinter einem Datum: Termin ist geschätzt, nicht bestätigt.</li></ul></article><article class="help-card"><h3>Aktualität</h3><ul><li>Der angezeigte Stand kommt aus einer zentralen Datei; oben rechts steht der Zeitpunkt der letzten Pflege.</li><li>Die Seite holt sich alle 5 Minuten und beim Zurückwechseln auf den Tab automatisch den neuesten Stand; F5 erzwingt es sofort.</li><li>Terminänderungen, erledigte Umzüge und Korrekturen bitte an Hrn. Sauter melden — er pflegt den Plan zentral, danach ist der Link für alle aktuell.</li></ul></article><article class="help-card"><h3>Drucken</h3><p>Für den Aushang ist A3 quer als gut lesbarer Standard gewählt; A4 kompakt ist oben neben „Drucken“ auswählbar. Gedruckt wird immer der gerade gewählte Stichtag mit seiner Ereignisüberschrift.</p></article></div></div></section>
 
   <div class="popover" id="assetPopover" role="dialog" aria-label="Ausstattungsdetails" hidden><button class="popover-close" id="popoverClose" type="button" aria-label="Schließen">×</button><div id="popoverContent"></div></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -546,6 +549,11 @@
       return sortMoves(activeMovesFor(asset.id)).find(x => x.day === null || x.day > day)?.move || null;
     }
 
+    function nextVisibleMoveDateAfter(iso) {
+      const day = isoDay(iso);
+      return data.moves.filter(move => move.status !== "cancelled" && move.status !== "done" && (!move.eventId || eventById(move.eventId)?.status !== "cancelled")).map(move => ({move,date:moveDate(move),day:isoDay(moveDate(move))})).filter(({move,day:moveDay}) => moveDay !== null && moveDay > day && (locationById(move.from)?.visible?.match(/main|side/) || locationById(move.to)?.visible?.match(/main|side/))).sort((a,b) => a.day-b.day)[0]?.date || "";
+    }
+
     function buildAppearances(iso, validation) {
       const byLocation = new Map();
       const push = (loc, appearance) => {
@@ -587,6 +595,7 @@
       const selectedIds = new Set(selected.map(e=>e.id));
       const eventMoves = data.moves.filter(m => m.status !== "cancelled" && (selectedIds.has(m.eventId) || (!m.eventId && m.date === selectedISO)));
       const appearances = buildAppearances(selectedISO,validation);
+      const nextVisibleISO = nextVisibleMoveDateAfter(selectedISO);
       appearanceRegistry = new Map();
 
       function roomMarkup(location) {
@@ -596,6 +605,10 @@
         const itemHtml = list.map((app,index) => {
           const moveIsSelected = app.move && (selectedIds.has(app.move.eventId) || (!app.move.eventId && app.move.date === selectedISO));
           const sourceSelected = eventMoves.some(m => m.assetId === app.asset.id && m.from === location.id);
+          const upcomingMove = nextMoveAfter(app.asset,selectedISO);
+          const isNextGlobalMove = !!nextVisibleISO && !!upcomingMove && moveDate(upcomingMove) === nextVisibleISO;
+          const nextDirection = isNextGlobalMove && app.location === upcomingMove.to ? "in" : isNextGlobalMove && app.location === upcomingMove.from ? "out" : "";
+          const nextClass = nextDirection === "in" ? " next-up" : nextDirection === "out" ? " next-out" : "";
           const key = `${location.id}|${app.asset.id}|${app.state}|${index}`;
           const direction = moveIsSelected ? "in" : sourceSelected ? "out" : app.direction;
           const dueISO = app.move ? moveDate(app.move) : "";
@@ -612,10 +625,12 @@
           else if(sourceSelected){statusHtml='<span class="asset-status out">→ RAUS</span>';statusLabel="geht bei diesem Termin heraus"}
           else if(overdue){statusHtml='<span class="asset-status overdue">ÜBERFÄLLIG</span>';statusLabel="überfällig"}
           else if(newlyActive){statusHtml='<span class="asset-status">+ NEU</span>';statusLabel="neu ab diesem Termin"}
-          appearanceRegistry.set(key,{...app,direction,eventSelected:moveIsSelected||sourceSelected,visualState,statusLabel});
+          const nextStatus = nextDirection ? ` · als Nächstes ${nextDirection === "out" ? "raus" : "rein"} am ${formatDate(nextVisibleISO)}` : "";
+          appearanceRegistry.set(key,{...app,direction,eventSelected:moveIsSelected||sourceSelected,visualState,statusLabel:statusLabel+nextStatus,nextDirection,nextISO:nextVisibleISO});
           const source = app.move ? `von ${locationShort(app.move.from)}` : `Bestand ${locationShort(app.asset.initialLocation)}`;
           const timing = app.move ? (app.move.status==="done"&&app.move.actualDate?`${formatDate(app.move.actualDate)} Ist`:(dueISO?formatDate(dueISO)+moveEst(app.move):"Termin offen")) : "bereits vorhanden";
-          return `<button class="asset-tile ${visualState}${eventClass}" type="button" data-appearance="${attr(key)}" aria-label="${attr(app.asset.label)}, ${attr(source)}, ${attr(timing)}, ${attr(statusLabel)}"><span class="asset-icon">${assetIcon(app.asset.category)}</span><span class="asset-body"><span class="asset-top"><span class="asset-name">${esc(app.asset.label)}</span>${statusHtml}</span><span class="asset-meta"><span>${esc(source)}</span><span>· ${esc(timing)}</span></span></span></button>`;
+          const ariaNext = nextDirection ? `, als Nächstes ${nextDirection === "out" ? "raus" : "rein"} am ${formatDate(nextVisibleISO)}` : "";
+          return `<button class="asset-tile ${visualState}${eventClass}${nextClass}" type="button" data-appearance="${attr(key)}" aria-label="${attr(app.asset.label)}, ${attr(source)}, ${attr(timing)}, ${attr(statusLabel)}${attr(ariaNext)}"><span class="asset-icon">${assetIcon(app.asset.category)}</span><span class="asset-body"><span class="asset-top"><span class="asset-name">${esc(app.asset.label)}</span>${statusHtml}</span><span class="asset-meta"><span>${esc(source)}</span><span>· ${esc(timing)}</span></span></span></button>`;
         }).join("") || `<div class="empty-room">Keine Ausstattung eingetragen</div>`;
         return `<article class="${classes}" data-room="${attr(location.id)}"><header class="room-head"><div><div class="room-kicker">${esc(location.type||location.kind)}</div><h2 class="room-title">${esc(location.name)}</h2></div><div class="room-owner">${esc(ownerAt(location,selectedISO))}</div></header><div class="room-use">${esc(location.use||"")}</div><div class="room-items">${itemHtml}</div></article>`;
       }

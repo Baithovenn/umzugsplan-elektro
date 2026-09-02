@@ -15,6 +15,7 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 
 **02.09.2026**
 
+- Viewer ergänzt: Nächster tatsächlicher Bewegungstermin wird dezent hellorange in den Raumkarten angedeutet; der ausgewählte Termin bleibt kräftig orange. Quellen erhalten eine leichte Auszugs-Andeutung. Drucklayout unverändert.
 - Viewer-Layout auf Desktop/Laptop korrigiert: vertikales Scrollen erlaubt, Raumkarten wachsen vollständig mit ihrem Inhalt und der Zeitstrahl folgt nach den Räumen. Drucklayout A3/A4 unverändert.
 - Projekt auf GitHub und GitHub Pages umgestellt.
 - `index.html` als reiner Viewer in Version 2.0 angelegt.
