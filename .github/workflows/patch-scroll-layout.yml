@@ -1,6 +1,6 @@
 name: patch-scroll-layout
 
-on: push
+on: [push]
 
 permissions:
   contents: write
@@ -11,30 +11,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch anwenden
+        shell: bash
         run: |
-          python3 -c 'from pathlib import Path; p=Path("index.html"); s=p.read_text(); old="""    /* Auf dem gezeigten Laptop (effektiv etwa 1536 × 960 CSS-Pixel) passt die gesamte Ansicht ohne Scrollen. */
-    @media (min-width:1181px) and (max-height:1050px){
-      .app-header{min-height:58px;padding:7px 16px;gap:13px}.brand{min-width:245px}.brand h1{font-size:17px}.nav-btn{padding:7px 11px}.header-btn,.header-select{padding:6px 9px}.header-select{padding-right:25px}
-      #panel-view .page{height:calc(100vh - 58px);display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:7px 15px 7px;overflow:hidden}
-      .view-toolbar{min-height:34px;margin-bottom:6px}.date-chip{padding:5px 9px}.date-chip strong{font-size:15px}
-      .building-layout{height:100%;min-height:0}.rooms-grid{height:100%;min-height:0;grid-template-rows:repeat(3,minmax(0,1fr))}.side-grid{height:100%;min-height:0;grid-template-rows:auto repeat(3,minmax(0,1fr))}
-      .room-card,.room-card.side{min-height:0}.side-label{font-size:10px}.room-card.side .room-items{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .event-changes{max-height:18px;overflow:hidden}
-      .timeline-shell{position:relative;bottom:auto;margin-top:7px}
-    }
-"""; new="""    /* Kompakte Laptopansicht mit vollständigem Inhalt: vertikales Scrollen statt Abschneiden. */
-    @media (min-width:1181px) and (max-height:1050px){
-      .app-header{min-height:58px;padding:7px 16px;gap:13px}.brand{min-width:245px}.brand h1{font-size:17px}.nav-btn{padding:7px 11px}.header-btn,.header-select{padding:6px 9px}.header-select{padding-right:25px}
-      #panel-view .page{min-height:calc(100vh - 58px);height:auto;display:block;padding:7px 15px 12px;overflow:visible}
-      .view-toolbar{min-height:34px;margin-bottom:6px}.date-chip{padding:5px 9px}.date-chip strong{font-size:15px}
-      .building-layout{height:auto;min-height:0}.rooms-grid,.side-grid{height:auto;min-height:0;grid-auto-rows:auto}
-      .room-card,.room-card.side{min-height:0;height:auto}.side-label{font-size:10px}.room-card.side .room-items{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .event-changes{max-height:none;overflow:visible}
-      .timeline-shell{position:relative;bottom:auto;margin-top:7px}
-    }
-"""; assert old in s, "Laptop-CSS nicht gefunden"; s=s.replace(old,new,1); assert "@media print" in s and "@page{size:A3 landscape" in s and "body.print-a4" in s, "Druck-CSS fehlt"; p.write_text(s)'
-          python3 -c 'from pathlib import Path; p=Path("ARBEITSSTAND.md"); s=p.read_text(); a="**02.09.2026**\n\n"; b="- Viewer-Layout auf Desktop/Laptop korrigiert: vertikales Scrollen erlaubt, Raumkarten wachsen vollständig mit ihrem Inhalt und der Zeitstrahl folgt nach den Räumen. Drucklayout A3/A4 unverändert.\n"; assert a in s; p.write_text(s if b in s else s.replace(a,a+b,1))'
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          pattern = re.compile(r"    /\* Auf dem gezeigten Laptop \(effektiv etwa 1536 × 960 CSS-Pixel\) passt die gesamte Ansicht ohne Scrollen\. \*/\n    @media \(min-width:1181px\) and \(max-height:1050px\)\{.*?\n    \}\n", re.S)
+          replacement = "\n".join([
+              "    /* Kompakte Laptopansicht mit vollständigem Inhalt: vertikales Scrollen statt Abschneiden. */",
+              "    @media (min-width:1181px) and (max-height:1050px){",
+              "      .app-header{min-height:58px;padding:7px 16px;gap:13px}.brand{min-width:245px}.brand h1{font-size:17px}.nav-btn{padding:7px 11px}.header-btn,.header-select{padding:6px 9px}.header-select{padding-right:25px}",
+              "      #panel-view .page{min-height:calc(100vh - 58px);height:auto;display:block;padding:7px 15px 12px;overflow:visible}",
+              "      .view-toolbar{min-height:34px;margin-bottom:6px}.date-chip{padding:5px 9px}.date-chip strong{font-size:15px}",
+              "      .building-layout{height:auto;min-height:0}.rooms-grid,.side-grid{height:auto;min-height:0;grid-auto-rows:auto}",
+              "      .room-card,.room-card.side{min-height:0;height:auto}.side-label{font-size:10px}.room-card.side .room-items{grid-template-columns:repeat(2,minmax(0,1fr))}",
+              "      .event-changes{max-height:none;overflow:visible}",
+              "      .timeline-shell{position:relative;bottom:auto;margin-top:7px}",
+              "    }",
+              "",
+          ])
+          s2, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit(f"Laptop-CSS nicht eindeutig gefunden: {n}")
+          if "@media print" not in s2 or "@page{size:A3 landscape" not in s2 or "body.print-a4" not in s2:
+              raise SystemExit("Druck-CSS-Prüfung fehlgeschlagen")
+          p.write_text(s2, encoding="utf-8")
+
+          w = Path("ARBEITSSTAND.md")
+          ws = w.read_text(encoding="utf-8")
+          anchor = "**02.09.2026**\n\n"
+          bullet = "- Viewer-Layout auf Desktop/Laptop korrigiert: vertikales Scrollen erlaubt, Raumkarten wachsen vollständig mit ihrem Inhalt und der Zeitstrahl folgt nach den Räumen. Drucklayout A3/A4 unverändert.\n"
+          if bullet not in ws:
+              if anchor not in ws:
+                  raise SystemExit("ARBEITSSTAND-Anker nicht gefunden")
+              ws = ws.replace(anchor, anchor + bullet, 1)
+              w.write_text(ws, encoding="utf-8")
+          PY
       - name: Commit
+        shell: bash
         run: |
           git config user.name Sauter
           git config user.email sauter@users.noreply.github.com
