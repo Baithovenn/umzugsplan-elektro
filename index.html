@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Umzugsplanung Elektroabteilung – Version 2.0</title>
+  <style>
+    :root {
+      --bg:#edf2f5; --surface:#fff; --surface-2:#f6f8fa; --ink:#17242d; --muted:#61727f;
+      --line:#d5dfe5; --brand:#006b73; --brand-dark:#004b52; --accent:#1c78b5;
+      --good:#14795f; --warn:#a36a00; --bad:#b42318; --shadow:0 8px 26px rgba(23,36,45,.10);
+      --future-opacity:.24; --due-opacity:.68;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.42 "Segoe UI",system-ui,sans-serif}
+    button,input,select,textarea{font:inherit} button{cursor:pointer} button:disabled{cursor:not-allowed;opacity:.5}
+    .app-header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:18px;padding:12px 22px;background:linear-gradient(110deg,var(--brand-dark),var(--brand));color:white;box-shadow:0 2px 14px rgba(0,0,0,.17)}
+    .brand{min-width:260px}.brand h1{margin:0;font-size:19px;line-height:1.2}.brand small{color:#cbe8e6}
+    .main-nav{display:flex;gap:5px}.nav-btn{border:0;border-radius:8px;padding:9px 13px;background:transparent;color:#e6f3f2;font-weight:650}.nav-btn:hover{background:rgba(255,255,255,.12)}.nav-btn.active{background:white;color:var(--brand-dark)}
+    .header-meta{display:flex;align-items:center;gap:12px;margin-left:auto;font-size:12px}.header-meta strong{font-size:13px}.header-actions{display:flex;align-items:center;gap:6px}.header-btn,.header-select{border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:7px 10px;background:rgba(255,255,255,.08);color:white}.header-btn:hover,.header-select:hover{background:rgba(255,255,255,.18)}.header-select{padding-right:26px;font-weight:650}.header-select option{background:white;color:var(--ink)}
+    .panel{display:none}.panel.active{display:block}.page{max-width:1660px;margin:0 auto;padding:18px 22px 150px}
+    .view-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:13px}.date-chip{padding:8px 11px;border-radius:9px;background:var(--surface);border:1px solid var(--line);box-shadow:0 2px 8px rgba(23,36,45,.04)}.date-chip strong{font-size:17px}.view-hint{color:var(--muted);font-size:12px}.view-toolbar .spacer{margin-left:auto}
+    .legend{display:flex;flex-wrap:wrap;gap:6px}.legend-item{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:11px;color:var(--muted)}.legend-swatch{width:10px;height:10px;border-radius:3px;background:var(--accent)}.legend-swatch.future{opacity:var(--future-opacity)}.legend-swatch.due{opacity:var(--due-opacity)}.legend-swatch.present{background:var(--good)}.legend-swatch.conflict{background:var(--bad)}
+    .building-layout{display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:16px;align-items:start}.rooms-grid{display:grid;grid-template-columns:repeat(3,minmax(245px,1fr));gap:12px}.side-grid{display:grid;gap:12px}.side-label{margin:0 0 -4px;color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+    .room-card{position:relative;min-height:245px;overflow:hidden;border:1px solid var(--line);border-top:5px solid #3e7fa6;border-radius:14px;background:var(--surface);box-shadow:var(--shadow);transition:opacity .18s,transform .18s,box-shadow .18s}.room-card.praxis{border-top-color:#0b9394}.room-card.side{min-height:180px;border-top-color:#798b98}.room-card.dimmed{opacity:.48}.room-card.affected{box-shadow:0 0 0 3px rgba(28,120,181,.25),var(--shadow)}.room-card.event-flash{animation:roomFlash .85s ease-out}.room-card.has-conflict{border-color:var(--bad)}
+    @keyframes roomFlash{0%{transform:scale(1);box-shadow:var(--shadow)}35%{transform:scale(1.014);box-shadow:0 0 0 6px rgba(28,120,181,.22),var(--shadow)}100%{transform:scale(1);box-shadow:0 0 0 3px rgba(28,120,181,.25),var(--shadow)}}
+    .room-head{display:flex;justify-content:space-between;gap:10px;padding:11px 13px 9px;border-bottom:1px solid #e9eef1}.room-kicker{color:var(--muted);font-size:10px;font-weight:750;letter-spacing:.08em;text-transform:uppercase}.room-title{margin:1px 0 0;font-size:20px}.room-owner{max-width:55%;color:#415561;font-size:11px;text-align:right}.room-use{padding:7px 13px;color:var(--muted);background:var(--surface-2);font-size:11px}.room-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:10px}.room-card.side .room-items{grid-template-columns:1fr}.empty-room{grid-column:1/-1;padding:20px;color:var(--muted);text-align:center}
+    .asset-tile{position:relative;display:grid;grid-template-columns:34px 1fr;gap:7px;min-width:0;padding:7px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);text-align:left;transition:opacity .16s,transform .16s,box-shadow .16s}.asset-tile:hover,.asset-tile:focus-visible{transform:translateY(-1px);box-shadow:0 4px 12px rgba(23,36,45,.13)}.asset-tile.future{opacity:var(--future-opacity);border-style:dashed}.asset-tile.due{opacity:var(--due-opacity);border-color:var(--warn)}.asset-tile.present{opacity:1}.asset-tile.event-change{opacity:1;border-color:var(--accent);box-shadow:0 0 0 2px rgba(28,120,181,.18);background:#eef7fc}.asset-tile.conflict{opacity:1;border-color:var(--bad);background:#fff0ee;box-shadow:0 0 0 2px rgba(180,35,24,.16)}
+    .asset-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#526b79;color:white;font-size:10px;font-weight:800}.asset-tile.present .asset-icon{background:var(--good)}.asset-tile.event-change .asset-icon{background:var(--accent)}.asset-tile.conflict .asset-icon{background:var(--bad)}.asset-name{overflow:hidden;font-size:11px;font-weight:700;line-height:1.2;text-overflow:ellipsis}.asset-meta{margin-top:2px;overflow:hidden;color:var(--muted);font-size:10px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}.asset-flag{position:absolute;top:4px;right:5px;font-size:11px;font-weight:900}.asset-flag.in{color:var(--good)}.asset-flag.out{color:var(--warn)}.asset-flag.bad{color:var(--bad)}
+    .timeline-shell{position:sticky;bottom:0;z-index:25;margin-top:16px;padding:12px 15px 11px;border:1px solid #c8d4db;border-radius:15px 15px 0 0;background:rgba(255,255,255,.97);box-shadow:0 -8px 25px rgba(23,36,45,.13);backdrop-filter:blur(7px)}.timeline-top{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:15px;align-items:start}.event-summary h2{margin:0;font-size:16px}.event-summary p{margin:3px 0 0;color:var(--muted);font-size:12px}.event-changes{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.change-chip{padding:3px 7px;border-radius:999px;background:#eaf4f9;color:#315a70;font-size:10px}.timeline-controls{display:flex;align-items:center;gap:6px}.timeline-btn{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--surface);color:var(--ink);font-weight:650}.timeline-btn:hover{background:#edf4f7}.timeline-date{min-width:120px;text-align:center;font-weight:800}.track-wrap{position:relative;height:47px;margin:5px 7px 0}.track-base{position:absolute;left:0;right:0;top:23px;height:5px;border-radius:999px;background:#d9e2e7}.today-line{position:absolute;top:9px;width:2px;height:29px;background:var(--brand);pointer-events:none}.today-line::before{content:"Heute";position:absolute;top:-9px;left:50%;transform:translateX(-50%);color:var(--brand);font-size:9px;font-weight:800}.event-marker{position:absolute;top:15px;width:18px;height:18px;transform:translateX(-50%);border:3px solid var(--accent);border-radius:50%;background:var(--surface);padding:0}.event-marker.partial{background:linear-gradient(90deg,var(--accent) 50%,var(--surface) 50%)}.event-marker.done{background:var(--accent)}.event-marker.conflict{border-color:var(--bad);background:var(--bad)}.event-marker.selected{outline:3px solid rgba(28,120,181,.25);outline-offset:2px;transform:translateX(-50%) scale(1.16)}.event-marker:hover{transform:translateX(-50%) scale(1.18)}.event-marker.selected:hover{transform:translateX(-50%) scale(1.25)}.range{position:absolute;left:0;right:0;top:12px;width:100%;height:26px;margin:0;opacity:.001;cursor:ew-resize}.range:focus-visible{opacity:.12}.thumb-bubble{position:absolute;top:-1px;transform:translateX(-50%);padding:2px 6px;border-radius:6px;background:var(--brand-dark);color:white;font-size:10px;font-weight:750;pointer-events:none;white-space:nowrap}.unknown-events{position:absolute;right:0;top:1px;padding:3px 7px;border-radius:999px;background:#fff4d4;color:#7c5900;font-size:10px;font-weight:750}
+    .popover{position:fixed;z-index:60;width:min(330px,calc(100vw - 24px));padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);box-shadow:0 14px 38px rgba(23,36,45,.24);pointer-events:none}.popover.pinned{pointer-events:auto}.popover[hidden]{display:none}.popover-close{position:absolute;top:5px;right:7px;border:0;background:transparent;color:var(--muted);font-size:18px}.popover h3{margin:0 25px 8px 0;font-size:15px}.popover dl{display:grid;grid-template-columns:82px 1fr;gap:4px 8px;margin:0;font-size:11px}.popover dt{color:var(--muted)}.popover dd{margin:0;font-weight:650}.popover-note{margin:8px 0 0;padding-top:7px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+    .manage-page{max-width:1660px;margin:0 auto;padding:20px 22px 55px}.manage-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:15px}.manage-head h2{margin:0;font-size:24px}.manage-head p{margin:4px 0 0;color:var(--muted)}.manage-head .spacer{margin-left:auto}
+    .audit-list{display:grid;gap:7px}.audit-row{display:grid;grid-template-columns:150px 160px 1fr;gap:10px;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface)}.audit-row time,.audit-row .who{color:var(--muted);font-size:11px}.help-grid{display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:12px}.help-card{padding:15px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}.help-card h3{margin:0 0 8px}.help-card ul,.help-card ol{margin:0;padding-left:20px}.help-card li+li{margin-top:5px}
+    .toast{position:fixed;right:18px;bottom:18px;z-index:100;max-width:380px;padding:11px 14px;border-radius:10px;background:var(--brand-dark);color:white;box-shadow:var(--shadow);transition:opacity .2s,transform .2s}.toast[hidden]{display:none}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .event-marker{z-index:3}.range{z-index:2}.thumb-bubble{z-index:4}.unknown-events{z-index:5;pointer-events:none}
+    .event-marker.est{border-style:dashed}
+    @media(max-width:1180px){.building-layout{grid-template-columns:1fr}.side-grid{grid-template-columns:repeat(3,1fr)}.side-label{grid-column:1/-1}.room-card.side{min-height:160px}.header-meta{display:none}}
+    @media(max-width:850px){.rooms-grid{grid-template-columns:repeat(2,minmax(240px,1fr))}.app-header{flex-wrap:wrap}.brand{min-width:0}.main-nav{order:3;width:100%}.timeline-top{grid-template-columns:1fr}.timeline-controls{justify-content:center}.page{padding-left:12px;padding-right:12px}}
+    @media(max-width:580px){.rooms-grid,.side-grid,.help-grid{grid-template-columns:1fr}.room-items{grid-template-columns:1fr}.view-toolbar{align-items:flex-start;flex-direction:column}.legend{display:none}.timeline-date{min-width:90px}.timeline-btn{padding:7px}.audit-row{grid-template-columns:1fr}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+    /* Kompakte Terminansicht: Status wird über Rahmen und Beschriftung statt über starke Transparenz vermittelt. */
+    .page{padding:13px 18px 16px}
+    .building-layout{grid-template-columns:minmax(0,1fr) 280px;gap:10px}
+    .rooms-grid,.side-grid{gap:8px}
+    .room-card{min-height:226px;border-radius:11px;border-top-width:4px;box-shadow:0 5px 18px rgba(23,36,45,.08)}
+    .room-card.side{min-height:174px}
+    .room-card.dimmed{opacity:1}
+    .room-card.affected{box-shadow:0 5px 18px rgba(23,36,45,.08)}
+    .room-head{align-items:flex-start;padding:7px 9px 6px}
+    .room-kicker{font-size:9px}
+    .room-title{margin-top:0;font-size:17px;line-height:1.15}
+    .room-owner{font-size:10px;line-height:1.25}
+    .room-use{min-height:25px;padding:5px 9px;font-size:10px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .room-items{gap:5px;padding:6px}
+    .asset-tile{grid-template-columns:30px minmax(0,1fr);gap:6px;min-height:45px;padding:5px;border:1.5px solid #bcc9cf;border-radius:7px;background:#f8fafb;opacity:1;align-items:start}
+    .asset-tile:hover,.asset-tile:focus-visible{transform:translateY(-1px);box-shadow:0 3px 9px rgba(23,36,45,.12)}
+    .asset-tile.future{opacity:1;border:1.5px solid #c6d1d6;background:#f1f4f5;color:#53636c}
+    .asset-tile.due,.asset-tile.event-out{opacity:1;border:2px dashed #bd7100;background:#fff8e9;box-shadow:none}
+    .asset-tile.present{opacity:1;border:2px solid #258369;background:#f4fbf8}
+    .asset-tile.overdue{opacity:1;border:2px solid #ad5f00;background:#fff1d8;box-shadow:0 0 0 1px rgba(173,95,0,.08)}
+    .asset-tile.event-change{opacity:1;border-color:#bd7100;background:#fff8e9;box-shadow:none;animation:assetPulse .7s ease-out}
+    .asset-tile.conflict{opacity:1;border:2px solid var(--bad);background:#fff0ee;box-shadow:0 0 0 1px rgba(180,35,24,.14)}
+    @keyframes assetPulse{0%{transform:scale(1)}35%{transform:scale(1.025);box-shadow:0 0 0 4px rgba(189,113,0,.20)}100%{transform:scale(1);box-shadow:none}}
+    .asset-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:6px;background:#7b8d96;color:white}
+    .asset-icon svg{width:19px;height:19px;display:block}
+    .asset-tile.future .asset-icon{background:#8a9aa2}
+    .asset-tile.present .asset-icon{background:var(--good)}
+    .asset-tile.due .asset-icon,.asset-tile.event-change .asset-icon,.asset-tile.event-out .asset-icon,.asset-tile.overdue .asset-icon{background:#ae6900}
+    .asset-tile.conflict .asset-icon{background:var(--bad)}
+    .asset-body{display:block;min-width:0}
+    .asset-top{display:flex;align-items:flex-start;gap:4px;min-width:0}
+    .asset-name{display:-webkit-box;flex:1;min-width:0;overflow:hidden;font-size:10.5px;font-weight:750;line-height:1.18;text-overflow:clip;white-space:normal;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+    .asset-meta{display:flex;flex-wrap:wrap;gap:0 5px;margin-top:3px;overflow:visible;color:#566a76;font-size:9.5px;line-height:1.2;white-space:normal}
+    .asset-meta span{white-space:nowrap}
+    .asset-status{flex:0 0 auto;padding:1px 4px;border-radius:4px;background:#bd7100;color:white;font-size:8px;font-weight:800;line-height:1.35;letter-spacing:.025em;white-space:nowrap}
+    .asset-status.overdue{background:#944f00}.asset-status.out{background:#944f00}.asset-status.conflict{background:var(--bad)}
+    .empty-room{padding:12px;font-size:10px}
+    .legend-item{padding:3px 6px;font-size:10px}
+    .legend-swatch{width:11px;height:9px;border-radius:2px;background:#f1f4f5;border:1.5px solid #c6d1d6}
+    .legend-swatch.future{opacity:1}.legend-swatch.due{opacity:1;border:2px dashed #bd7100;background:#fff8e9}.legend-swatch.present{background:#f4fbf8;border:2px solid #258369}.legend-swatch.overdue{background:#fff1d8;border:2px solid #ad5f00}.legend-swatch.conflict{background:#fff0ee;border:2px solid var(--bad)}
+    .timeline-shell{margin-top:9px;padding:8px 11px 7px;border-radius:11px 11px 0 0}
+    .timeline-top{gap:10px}.event-summary h2{font-size:14px}.event-summary p{margin-top:2px;font-size:11px}.event-changes{margin-top:4px}.change-chip{padding:2px 6px;font-size:9px}
+    .timeline-btn{padding:6px 9px}.track-wrap{height:38px;margin-top:2px}.track-base{top:19px}.today-line{top:7px;height:26px}.event-marker{top:11px}.range{top:8px}.thumb-bubble{top:-2px}
+    .print-heading{display:none}
+
+    /* Auf dem gezeigten Laptop (effektiv etwa 1536 × 960 CSS-Pixel) passt die gesamte Ansicht ohne Scrollen. */
+    @media (min-width:1181px) and (max-height:1050px){
+      .app-header{min-height:58px;padding:7px 16px;gap:13px}.brand{min-width:245px}.brand h1{font-size:17px}.nav-btn{padding:7px 11px}.header-btn,.header-select{padding:6px 9px}.header-select{padding-right:25px}
+      #panel-view .page{height:calc(100vh - 58px);display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:7px 15px 7px;overflow:hidden}
+      .view-toolbar{min-height:34px;margin-bottom:6px}.date-chip{padding:5px 9px}.date-chip strong{font-size:15px}
+      .building-layout{height:100%;min-height:0}.rooms-grid{height:100%;min-height:0;grid-template-rows:repeat(3,minmax(0,1fr))}.side-grid{height:100%;min-height:0;grid-template-rows:auto repeat(3,minmax(0,1fr))}
+      .room-card,.room-card.side{min-height:0}.side-label{font-size:10px}.room-card.side .room-items{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .event-changes{max-height:18px;overflow:hidden}
+      .timeline-shell{position:relative;bottom:auto;margin-top:7px}
+    }
+
+    @media(max-width:1180px){.building-layout{grid-template-columns:1fr}.room-card.side{min-height:160px}}
+    @media(max-width:580px){.room-items{grid-template-columns:1fr}.asset-name{font-size:11px}}
+
+    @media print{
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      html,body{width:auto;height:auto;margin:0;background:white;color:#111;font:11pt/1.18 "Segoe UI",Arial,sans-serif}
+      .app-header,.view-toolbar,.timeline-shell,.popover,.toast,#panel-audit,#panel-help{display:none!important}
+      #panel-view{display:block!important}.page{display:block!important;width:auto!important;height:auto!important;max-width:none;margin:0;padding:0!important;overflow:visible!important}
+      .print-heading{display:grid;grid-template-columns:minmax(0,1fr) 95mm;gap:5.5mm;align-items:end;margin:0 0 4mm;padding:0 0 3mm;border-bottom:.6mm solid #006b73}
+      .print-heading h1{margin:0;font-size:18pt;line-height:1.05}.print-heading h2{margin:1.4mm 0 0;font-size:14pt;line-height:1.15}.print-heading p{margin:1.4mm 0 0;color:#34454e;font-size:10.5pt}.print-meta{width:95mm;text-align:right;white-space:nowrap;font-size:10pt;color:#34454e}
+      .print-legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:1.7mm;margin-top:1.4mm;font-size:8.7pt}.print-legend span{display:inline-flex;align-items:center;gap:1.1mm;white-space:nowrap}.print-legend i{display:inline-block;flex:0 0 auto}
+      .building-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 71mm;gap:3mm;align-items:stretch;height:248mm}
+      .rooms-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:3mm;height:248mm}
+      .side-grid{display:grid!important;grid-template-columns:1fr;grid-template-rows:5.5mm repeat(3,minmax(0,1fr));gap:3mm;height:248mm}
+      .side-label{margin:0;font-size:9pt}
+      .room-card,.room-card.side{min-height:0!important;height:auto;break-inside:avoid;box-shadow:none;border-radius:3mm;border-width:.4mm;border-top-width:1.4mm;overflow:hidden}
+      .room-head{padding:1.4mm 1.8mm 1.1mm;gap:1.4mm}.room-kicker{font-size:8.2pt}.room-title{font-size:13.5pt}.room-owner{font-size:8.8pt;line-height:1.12}
+      .room-use{display:none}
+      .room-items,.room-card.side .room-items{display:block!important;padding:1.1mm}
+      .asset-tile{display:flex!important;align-items:flex-start;width:100%;height:8.25mm;min-height:8.25mm;margin:0 0 .45mm;padding:.6mm 1.1mm;gap:1.1mm;overflow:hidden;border-radius:1.4mm;box-shadow:none!important;transform:none!important;animation:none!important}
+      .asset-icon{flex:0 0 7.1mm;width:7.1mm;height:7.1mm;border-radius:1.1mm}.asset-icon svg{width:5.3mm;height:5.3mm}.asset-body{flex:1;min-width:0}.asset-name{display:block;max-height:none;overflow:hidden;font-size:9.6pt;line-height:1.08;white-space:nowrap;text-overflow:ellipsis}.asset-meta{display:flex;flex-wrap:nowrap;gap:1.4mm;margin-top:.3mm;font-size:8pt;line-height:1.05}.asset-meta span{display:inline;white-space:nowrap}.asset-status{padding:.15mm .8mm;border-radius:.8mm;font-size:7.3pt}
+      .room-card.side .asset-tile{width:100%;height:10mm;min-height:10mm;margin-bottom:.7mm}.room-card.side .asset-icon{display:none}.room-card.side .asset-name{font-size:9pt}.room-card.side .asset-meta{font-size:7.8pt}
+      .empty-room{padding:4mm;font-size:10pt}
+
+      /* A4 bleibt als platzsparende Reserve erhalten. */
+      body.print-a4{font-size:8pt}
+      body.print-a4 .print-heading{grid-template-columns:minmax(0,1fr) 67mm;gap:4mm;margin-bottom:3mm;padding-bottom:2mm;border-bottom-width:.5mm}
+      body.print-a4 .print-heading h1{font-size:13pt}body.print-a4 .print-heading h2{margin-top:1mm;font-size:10pt}body.print-a4 .print-heading p{margin-top:1mm;font-size:7.5pt}body.print-a4 .print-meta{width:67mm;font-size:7pt}
+      body.print-a4 .print-legend{gap:1.2mm;margin-top:1mm;font-size:6.2pt}body.print-a4 .print-legend span{gap:.8mm}
+      body.print-a4 .building-layout{grid-template-columns:minmax(0,1fr) 50mm;gap:2mm;height:174mm}
+      body.print-a4 .rooms-grid{gap:2mm;height:174mm}
+      body.print-a4 .side-grid{grid-template-rows:4mm repeat(3,minmax(0,1fr));gap:2mm;height:174mm}
+      body.print-a4 .side-label{font-size:6.5pt}
+      body.print-a4 .room-card,body.print-a4 .room-card.side{border-radius:2mm;border-width:.3mm;border-top-width:1mm}
+      body.print-a4 .room-head{padding:1mm 1.3mm .8mm;gap:1mm}body.print-a4 .room-kicker{font-size:5.8pt}body.print-a4 .room-title{font-size:9.5pt}body.print-a4 .room-owner{font-size:6.2pt}
+      body.print-a4 .room-items,body.print-a4 .room-card.side .room-items{padding:.8mm}
+      body.print-a4 .asset-tile{height:5.8mm;min-height:5.8mm;margin-bottom:.3mm;padding:.4mm .8mm;gap:.8mm;border-radius:1mm}
+      body.print-a4 .asset-icon{flex-basis:5mm;width:5mm;height:5mm;border-radius:.8mm}body.print-a4 .asset-icon svg{width:3.7mm;height:3.7mm}body.print-a4 .asset-name{font-size:6.8pt}body.print-a4 .asset-meta{gap:1mm;margin-top:.2mm;font-size:5.6pt}body.print-a4 .asset-status{padding:.1mm .6mm;border-radius:.6mm;font-size:5.2pt}
+      body.print-a4 .room-card.side .asset-tile{height:7mm;min-height:7mm;margin-bottom:.5mm}body.print-a4 .room-card.side .asset-name{font-size:6.4pt}body.print-a4 .room-card.side .asset-meta{font-size:5.6pt}
+      body.print-a4 .empty-room{padding:3mm;font-size:7pt}
+    }
+  </style>
+  <style id="printPageStyle">@page{size:A3 landscape;margin:7mm}</style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand"><h1>Umzugsplanung Elektroabteilung</h1><small>Heinz-Rühmann-Straße → Finninger Straße · V2.0</small></div>
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <button class="nav-btn active" data-panel="view">Ansicht</button>
+      <button class="nav-btn" data-panel="audit">Änderungen</button>
+      <button class="nav-btn" data-panel="help">Bedienung</button>
+    </nav>
+    <div class="header-meta"><span>Systemdatum<br><strong id="systemDate"></strong></span><span>Datenstand<br><strong id="dataTimestamp"></strong></span></div>
+    <div class="header-actions"><select class="header-select" id="printFormatSelect" aria-label="Papierformat für den Ausdruck" title="Papierformat für den Ausdruck"><option value="a3">A3 · lesbar</option><option value="a4">A4 · kompakt</option></select><button class="header-btn" id="printBtn" type="button">Drucken</button></div>
+  </header>
+
+  <section class="panel active" id="panel-view">
+    <div class="page">
+      <header class="print-heading">
+        <div><h1>Umzugsplanung Elektroabteilung</h1><h2 id="printEventTitle"></h2><p id="printEventDetail"></p></div>
+        <div class="print-meta"><div id="printGenerated"></div><div class="print-legend"><span><i class="legend-swatch present"></i> fertig</span><span><i class="legend-swatch due"></i> Termin</span><span><i class="legend-swatch future"></i> später</span><span><i class="legend-swatch overdue"></i> überfällig</span><span><i class="legend-swatch conflict"></i> Konflikt</span><span>≈ geschätzt</span></div></div>
+      </header>
+      <div class="view-toolbar">
+        <div class="date-chip"><span class="sr-only">Gewähltes Datum</span><strong id="selectedDateLabel"></strong></div>
+        <div class="view-hint" id="selectedDateHint"></div><div class="spacer"></div>
+        <div class="legend" aria-label="Darstellung"><span class="legend-item"><i class="legend-swatch present"></i> fertig</span><span class="legend-item"><i class="legend-swatch due"></i> am Termin</span><span class="legend-item"><i class="legend-swatch future"></i> kommt später</span><span class="legend-item"><i class="legend-swatch overdue"></i> überfällig</span><span class="legend-item"><i class="legend-swatch conflict"></i> Konflikt</span><span class="legend-item">≈ geschätzt</span></div>
+      </div>
+      <div class="building-layout"><div class="rooms-grid" id="mainRooms"></div><aside class="side-grid" id="sideRooms"><p class="side-label">Büros und Nebenraum</p></aside></div>
+      <section class="timeline-shell" aria-label="Zeitstrahl">
+        <div class="timeline-top"><div class="event-summary" id="eventSummary" aria-live="polite"></div><div class="timeline-controls"><button class="timeline-btn" id="prevEventBtn" type="button" aria-label="Vorheriges Ereignis">←</button><button class="timeline-btn" id="todayBtn" type="button">Heute</button><span class="timeline-date" id="timelineDate"></span><button class="timeline-btn" id="nextEventBtn" type="button" aria-label="Nächstes Ereignis">→</button></div></div>
+        <div class="track-wrap" id="trackWrap"><div class="track-base"></div><div class="today-line" id="todayLine"></div><div id="markers"></div><input class="range" id="dateRange" type="range" aria-label="Datum auswählen"><div class="thumb-bubble" id="thumbBubble"></div><div class="unknown-events" id="unknownEvents"></div></div>
+      </section>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-audit"><div class="manage-page"><div class="manage-head"><div><h2>Änderungsprotokoll</h2><p>Die jüngsten Änderungen stehen oben.</p></div></div><div class="audit-list" id="auditList"></div></div></section>
+
+  <section class="panel" id="panel-help"><div class="manage-page"><div class="manage-head"><div><h2>Bedienung</h2><p>Nur schauen — gepflegt wird der Plan zentral.</p></div></div><div class="help-grid"><article class="help-card"><h3>Zeitstrahl</h3><ul><li>Der heutige Tag kommt automatisch aus der Systemzeit des Rechners.</li><li>Mit ← und → springt man zum vorherigen oder nächsten Ereignis.</li><li>Der Schieber kann mit der Maus frei auf ein Datum gesetzt werden.</li><li>Ein Klick auf eine Ereignismarke zeigt alle Änderungen dieses Tages; die betroffenen Räume blinken kurz auf.</li></ul></article><article class="help-card"><h3>Darstellung</h3><ul><li>Grün umrandet: bestätigt vorhanden.</li><li>Gestrichelt orange: laut Plan fällig, aber noch nicht bestätigt.</li><li>Grau: kommt erst später oder Termin offen.</li><li>Dunkelorange „ÜBERFÄLLIG“: Plantermin verstrichen, Umzug nicht gemeldet.</li><li>Rot: dieselbe Ausstattung wurde widersprüchlich eingeplant.</li><li>≈ hinter einem Datum: Termin ist geschätzt, nicht bestätigt.</li></ul></article><article class="help-card"><h3>Aktualität</h3><ul><li>Der angezeigte Stand kommt aus einer zentralen Datei; oben rechts steht der Zeitpunkt der letzten Pflege.</li><li>Die Seite holt sich alle 5 Minuten und beim Zurückwechseln auf den Tab automatisch den neuesten Stand; F5 erzwingt es sofort.</li><li>Terminänderungen, erledigte Umzüge und Korrekturen bitte an Hrn. Sauter melden — er pflegt den Plan zentral, danach ist der Link für alle aktuell.</li></ul></article><article class="help-card"><h3>Drucken</h3><p>Für den Aushang ist A3 quer als gut lesbarer Standard gewählt; A4 kompakt ist oben neben „Drucken“ auswählbar. Gedruckt wird immer der gerade gewählte Stichtag mit seiner Ereignisüberschrift.</p></article></div></div></section>
+
+  <div class="popover" id="assetPopover" role="dialog" aria-label="Ausstattungsdetails" hidden><button class="popover-close" id="popoverClose" type="button" aria-label="Schließen">×</button><div id="popoverContent"></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script id="seed-data" type="application/json">
+{
+ "schemaVersion": 1,
+ "appVersion": "2.0",
+ "actor": "Sauter",
+ "updatedAt": "2026-09-02T12:00:00.000Z",
+ "categories": [
+  {"id": "display", "name": "Clevertouch / Display", "code": "CT", "capacity": 1},
+  {"id": "beamer", "name": "Beamer", "code": "BM", "capacity": 1},
+  {"id": "tables", "name": "Tische und Stühle", "code": "T/S", "capacity": 0},
+  {"id": "chairs", "name": "Stühle", "code": "ST", "capacity": 0},
+  {"id": "lecturer", "name": "Dozententisch", "code": "DT", "capacity": 1},
+  {"id": "cabinet", "name": "Schränke", "code": "SR", "capacity": 0},
+  {"id": "elabo", "name": "ELABO", "code": "EL", "capacity": 0},
+  {"id": "it", "name": "IT / Drucker", "code": "IT", "capacity": 0},
+  {"id": "special", "name": "Sonderausstattung", "code": "SO", "capacity": 0},
+  {"id": "other", "name": "Sonstiges", "code": "…", "capacity": 0}
+ ],
+ "people": [
+  {"id": "frank", "name": "Hr. Frank"}, {"id": "albrecht", "name": "Hr. Albrecht"}, {"id": "planz", "name": "Hr. Planz"},
+  {"id": "durst", "name": "Hr. Durst"}, {"id": "hoffmann", "name": "Hr. Hoffmann"}, {"id": "heilig", "name": "Hr. Heilig"},
+  {"id": "sauter", "name": "Hr. Sauter"}, {"id": "lautier-skanda", "name": "Hr. Lautier-Skanda"},
+  {"id": "fremddozent", "name": "Fremddozent"}, {"id": "baur", "name": "Christian Baur / IT"},
+  {"id": "elektrofirma", "name": "Elektrofirma extern"}, {"id": "spedition", "name": "Spedition"}, {"id": "offen", "name": "noch offen"}
+ ],
+ "locations": [
+  {"id": "FI-U1", "name": "FI-U1", "kind": "unterricht", "visible": "main", "type": "Theorie", "ownerCurrent": "sauter", "ownerFuture": "", "ownerChangeEvent": "", "use": "Einzug nach Endreinigung zwischen 07.09. und 14.09.", "active": true},
+  {"id": "FI-U2", "name": "FI-U2", "kind": "unterricht", "visible": "main", "type": "Theorie", "ownerCurrent": "heilig", "ownerFuture": "albrecht", "ownerChangeEvent": "ev_owner_change", "use": "Zunächst Heilig, später Albrecht.", "active": true},
+  {"id": "FI-U3", "name": "FI-U3", "kind": "unterricht", "visible": "main", "type": "Theorie", "ownerCurrent": "heilig", "ownerFuture": "", "ownerChangeEvent": "", "use": "IEBT neu ab 21.09.", "active": true},
+  {"id": "FI-U4", "name": "FI-U4", "kind": "unterricht", "visible": "main", "type": "Theorie", "ownerCurrent": "fremddozent", "ownerFuture": "", "ownerChangeEvent": "", "use": "Nutzungsbeginn offen.", "active": true},
+  {"id": "FI-U5", "name": "FI-U5", "kind": "unterricht", "visible": "main", "type": "Praxis", "ownerCurrent": "planz", "ownerFuture": "", "ownerChangeEvent": "", "use": "Endgültiger CT ab 26.10.", "active": true},
+  {"id": "FI-U6", "name": "FI-U6", "kind": "unterricht", "visible": "main", "type": "Praxis", "ownerCurrent": "hoffmann", "ownerFuture": "", "ownerChangeEvent": "", "use": "Aufbau September, Nutzung durch Hoffmann ab 26.10.", "active": true},
+  {"id": "FI-U7", "name": "FI-U7", "kind": "unterricht", "visible": "main", "type": "Praxis", "ownerCurrent": "lautier-skanda", "ownerFuture": "", "ownerChangeEvent": "", "use": "Prüfungsvorbereitung ab 15.09.", "active": true},
+  {"id": "FI-U8", "name": "FI-U8", "kind": "unterricht", "visible": "main", "type": "Praxis", "ownerCurrent": "frank", "ownerFuture": "", "ownerChangeEvent": "", "use": "Umzug aus HR-3 am 21.09.", "active": true},
+  {"id": "FI-U9", "name": "FI-U9", "kind": "unterricht", "visible": "main", "type": "Praxis", "ownerCurrent": "durst", "ownerFuture": "", "ownerChangeEvent": "", "use": "Aufbau und Nutzung ab 26.10.", "active": true},
+  {"id": "FI-A1", "name": "Büro A1", "kind": "buero", "visible": "side", "type": "Büro", "ownerLabel": "Durst · Planz · Hoffmann · Heilig", "use": "Bezugsfertig bis 14.09.", "active": true},
+  {"id": "FI-A2", "name": "Büro A2", "kind": "buero", "visible": "side", "type": "Büro", "ownerLabel": "Frank · Sauter · Albrecht · Lautier-Skanda", "use": "Bezugsfertig bis 14.09.", "active": true},
+  {"id": "FI-KUECHE", "name": "Küche", "kind": "nebenraum", "visible": "side", "type": "Nebenraum", "ownerLabel": "", "use": "Klein; Umfang des Umzugs noch offen.", "active": true},
+  {"id": "HR-1", "name": "HR-1", "kind": "quelle", "visible": "source", "active": true}, {"id": "HR-3", "name": "HR-3", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "HR-4", "name": "HR-4", "kind": "quelle", "visible": "source", "active": true}, {"id": "HR-5", "name": "HR-5", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "HR-6", "name": "HR-6", "kind": "quelle", "visible": "source", "active": true}, {"id": "HR-7", "name": "HR-7", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "HR-11", "name": "HR-11", "kind": "quelle", "visible": "source", "active": true}, {"id": "HR-12", "name": "HR-12", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "HR-13", "name": "HR-13", "kind": "quelle", "visible": "source", "active": true}, {"id": "HR-13A", "name": "HR-13A", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "HR-BUERO", "name": "Ausbilderbüros HR", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "HR-AUFENTHALT", "name": "Aufenthaltsraum HR", "kind": "quelle", "visible": "source", "active": true},
+  {"id": "FI-LAGER", "name": "Lager FI", "kind": "lager", "visible": "source", "active": true},
+  {"id": "BG5", "name": "Baumgartenstraße 5", "kind": "lager", "visible": "source", "active": true},
+  {"id": "BESCHAFFUNG", "name": "Bestellung / Beschaffung", "kind": "system", "visible": "source", "active": true},
+  {"id": "OFFEN", "name": "Herkunft offen", "kind": "system", "visible": "source", "active": true},
+  {"id": "SCHROTT", "name": "Verschrottung", "kind": "system", "visible": "source", "active": true}
+ ],
+ "events": [
+  {"id": "ev_floor", "title": "Boden und Decken allgemein fertig", "date": "2026-09-04", "endDate": "", "status": "planned", "responsible": "offen", "affectedRooms": [], "note": "Allgemeiner Baufortschritt."},
+  {"id": "ev_beamer_u1", "title": "Beamer U1 wird geprüft (Christian Baur)", "date": "2026-09-03", "endDate": "", "status": "planned", "responsible": "baur", "affectedRooms": ["FI-U1"], "note": ""},
+  {"id": "ev_early_rooms", "title": "FI-U1 bis FI-U4 aufgebaut und gestrichen", "date": "2026-09-07", "endDate": "", "status": "planned", "estimated": true, "responsible": "offen", "affectedRooms": ["FI-U1", "FI-U2", "FI-U3", "FI-U4"], "note": "Zieltermin; U3/U4 hängen baulich an Malern und Endreinigung (11.09.)."},
+  {"id": "ev_spackle", "title": "Spachtelarbeiten allgemein fertig", "date": "2026-09-08", "endDate": "", "status": "planned", "responsible": "offen", "affectedRooms": [], "note": "Allgemeiner Baufortschritt."},
+  {"id": "ev_clean", "title": "Malern und allgemeine Endreinigung", "date": "2026-09-11", "endDate": "", "status": "planned", "responsible": "offen", "affectedRooms": ["FI-U1", "FI-U2"], "note": "Einzug Sauter und Heilig hängt an der tatsächlichen Endreinigung."},
+  {"id": "ev_move_sh", "title": "Einzug Sauter und Heilig", "date": "2026-09-11", "endDate": "2026-09-14", "status": "planned", "estimated": true, "responsible": "spedition", "affectedRooms": ["FI-U1", "FI-U2"], "note": "Frühestens 07.09., spätestens 14.09.; als Planwert zunächst an die Endreinigung gekoppelt."},
+  {"id": "ev_offices", "title": "Büros A1 und A2 bezugsfertig", "date": "2026-09-14", "endDate": "", "status": "planned", "responsible": "offen", "affectedRooms": ["FI-A1", "FI-A2"], "note": "Ausbilder können anfangs auch ohne Büro arbeiten."},
+  {"id": "ev_sep_wave", "title": "September-Umzugswelle HR-4 / HR-11 / HR-13", "date": "2026-09-14", "endDate": "2026-09-22", "status": "planned", "responsible": "spedition", "affectedRooms": ["FI-U5", "FI-U6", "FI-U7", "FI-U8"], "note": "Abbau am 14.09.; genauer Speditionstermin offen; Aufbau bis spätestens 22.09."},
+  {"id": "ev_u7_ready", "title": "FI-U7 für Prüfungsvorbereitung bereit", "date": "2026-09-14", "endDate": "", "status": "planned", "responsible": "elektrofirma", "affectedRooms": ["FI-U7"], "note": "ELABO-Anschluss soll bis dahin erledigt sein."},
+  {"id": "ev_u7_start", "title": "Prüfungsvorbereitung startet in FI-U7", "date": "2026-09-15", "endDate": "", "status": "planned", "responsible": "lautier-skanda", "affectedRooms": ["FI-U7"], "note": "Di IEBT, Mi EGS, Do Mechatronik."},
+  {"id": "ev_hr12_move", "title": "CT-HR12 nach FI-U3", "date": "2026-09-18", "endDate": "", "status": "planned", "estimated": true, "responsible": "offen", "affectedRooms": ["FI-U3"], "note": "Muss vor dem 21.09. passieren — U3 startet mit IEBT neu (K5)."},
+  {"id": "ev_u3_course", "title": "IEBT neu startet in FI-U3", "date": "2026-09-21", "endDate": "", "status": "planned", "responsible": "offen", "affectedRooms": ["FI-U3"], "note": "Anderer Kurs als die Prüfungsvorbereitung."},
+  {"id": "ev_u8_move", "title": "HR-3 wird abgebaut und in FI-U8 aufgebaut", "date": "2026-09-21", "endDate": "", "status": "planned", "responsible": "spedition", "affectedRooms": ["FI-U8"], "note": "ELABO, Stühle und Clevertouch aus HR-3."},
+  {"id": "ev_owner_change", "title": "Heilig wechselt nach U3, Albrecht übernimmt U2", "date": "2026-09-21", "endDate": "", "status": "planned", "estimated": true, "responsible": "offen", "affectedRooms": ["FI-U2", "FI-U3"], "note": "Anker: IEBT neu startet am 21.09. in U3 — Termin bestätigen (K8)."},
+  {"id": "ev_frank_move", "title": "Umzug Hr. Frank / CT-HR1 nach FI-U4", "date": "2026-09-28", "endDate": "", "status": "planned", "estimated": true, "responsible": "offen", "affectedRooms": ["FI-U4"], "note": "Nach Umzug Frank in U8; U8 braucht vorher das ELABO-Prüfprotokoll."},
+  {"id": "ev_late_wave", "title": "Umzugsphase nach den Prüfungen", "date": "2026-10-26", "endDate": "", "status": "planned", "estimated": true, "responsible": "spedition", "affectedRooms": ["FI-U5", "FI-U6", "FI-U7", "FI-U9"], "note": "U6 ist bereits im September ausgestattet; ab hier beginnt die Nutzung durch Hoffmann."},
+  {"id": "ev_i4_move", "title": "Industrie 4.0 nach FI-U5", "date": "2026-09-14", "endDate": "", "status": "planned", "estimated": true, "responsible": "offen", "affectedRooms": ["FI-U5"], "note": "In den Unterlagen mit Fragezeichen; Strom/Druckluft/Netzwerk in U5 vorher klären."},
+  {"id": "ev_u8_elabo", "title": "ELABO-Prüfung U8 — Firma und Termin offen", "date": "", "endDate": "", "status": "planned", "responsible": "offen", "affectedRooms": ["FI-U8"], "note": "K9: ohne Prüfprotokoll keine Freigabe des Raums für Teilnehmer."}
+ ],
+ "assets": [
+  {"id": "MOEBEL-FI-U1", "label": "Tische und Stühle U1", "category": "tables", "initialLocation": "FI-U1", "note": "Bereits vorhanden.", "active": true},
+  {"id": "BEAMER-U1", "label": "Beamer U1", "category": "beamer", "initialLocation": "FI-U1", "note": "Prüfung durch Christian Baur vorgesehen.", "active": true},
+  {"id": "CT-HR13", "label": "Mobiles Fremddisplay HR-13", "category": "display", "initialLocation": "HR-13", "note": "Für den Umzug Sauter vorbereitet.", "active": true},
+  {"id": "FLIP-U1", "label": "Flipchart U1", "category": "other", "initialLocation": "OFFEN", "note": "Vorhandensein noch klären.", "active": true},
+  {"id": "SCHRANK-U1", "label": "Schrankpaket U1", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "MOEBEL-FI-U2-REST", "label": "Tische und Stühle U2 Bestand", "category": "tables", "initialLocation": "FI-U2", "note": "Normalbelegung bleibt in U2.", "active": true},
+  {"id": "MOEBEL-FI-U2-U3", "label": "Möbelpaket U2 für U3", "category": "tables", "initialLocation": "FI-U2", "note": "Überschuss aus U2.", "active": true},
+  {"id": "MOEBEL-FI-U2-U4", "label": "Möbelpaket U2 für U4", "category": "tables", "initialLocation": "FI-U2", "note": "Überschuss aus U2.", "active": true},
+  {"id": "BEAMER-U2", "label": "Beamer U2", "category": "beamer", "initialLocation": "FI-LAGER", "note": "Als anfängliche Anzeige vorgesehen.", "active": true},
+  {"id": "CT-HR4", "label": "Mobiler Clevertouch HR-4", "category": "display", "initialLocation": "HR-4", "note": "Zuerst U7, später U2.", "active": true},
+  {"id": "FLIP-U2", "label": "Flipchart U2", "category": "other", "initialLocation": "OFFEN", "note": "Vorhandensein noch klären.", "active": true},
+  {"id": "SCHRANK-U2", "label": "Schrankpaket U2", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "CT-HR12", "label": "Clevertouch HR-12", "category": "display", "initialLocation": "HR-12", "note": "Ziel U3, Termin offen.", "active": true},
+  {"id": "DOZENT-U3", "label": "Dozententisch U3", "category": "lecturer", "initialLocation": "OFFEN", "note": "Nicht konkret zugeordnet.", "active": true},
+  {"id": "SCHRANK-U3", "label": "Schrankpaket U3", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "CT-HR1", "label": "Mobiler Clevertouch HR-1", "category": "display", "initialLocation": "HR-1", "note": "Kommt nach U4, wenn Frank umzieht.", "active": true},
+  {"id": "DOZENT-U4", "label": "Dozententisch U4", "category": "lecturer", "initialLocation": "OFFEN", "note": "Nicht konkret zugeordnet.", "active": true},
+  {"id": "SCHRANK-U4", "label": "Schrankpaket U4", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "CT-HR5", "label": "Clevertouch HR-5", "category": "display", "initialLocation": "HR-5", "note": "Endgerät U5.", "active": true},
+  {"id": "MOEBEL-HR11-U5", "label": "9 Tische (3 × 3) und Stühle", "category": "tables", "initialLocation": "HR-11", "note": "Letzte Dreierreihe entfällt.", "active": true},
+  {"id": "DOZENT-HR11", "label": "Dozententisch HR-11", "category": "lecturer", "initialLocation": "HR-11", "note": "Ziel U5.", "active": true},
+  {"id": "I4-HR13A", "label": "Industrie-4.0-Ausstattung", "category": "special", "initialLocation": "HR-13A", "note": "Kommt in die entfallende letzte Reihe in U5.", "active": true},
+  {"id": "SCHRANK-U5", "label": "Schrankpaket U5", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "CT-HR11", "label": "Clevertouch HR-11", "category": "display", "initialLocation": "HR-11", "note": "Ziel U6.", "active": true},
+  {"id": "MOEBEL-HR4-U6", "label": "Tische und Stühle HR-4", "category": "tables", "initialLocation": "HR-4", "note": "Aufbau September, Nutzung ab 26.10.", "active": true},
+  {"id": "DOZENT-HR4-1", "label": "Dozententisch HR-4 Nr. 1", "category": "lecturer", "initialLocation": "HR-4", "note": "Ziel U6.", "active": true},
+  {"id": "SCHRANK-U6", "label": "Schrankpaket U6", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "ELABO-U7", "label": "ELABO-Arbeitsplätze U7", "category": "elabo", "initialLocation": "FI-U7", "note": "Bereits aufgebaut.", "active": true},
+  {"id": "CT-HR7", "label": "Fester Clevertouch HR-7", "category": "display", "initialLocation": "HR-7", "note": "Endgerät U7.", "active": true},
+  {"id": "STUEHLE-U7", "label": "Passende Stuhlgruppe U7", "category": "chairs", "initialLocation": "OFFEN", "note": "Quelle durch Lautier-Skanda zu klären.", "active": true},
+  {"id": "DOZENT-HR4-2", "label": "Dozententisch HR-4 Nr. 2", "category": "lecturer", "initialLocation": "HR-4", "note": "Ziel U7.", "active": true},
+  {"id": "SCHRANK-U7", "label": "Schrankpaket U7", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "CT-HR3", "label": "Clevertouch HR-3", "category": "display", "initialLocation": "HR-3", "note": "Ziel U8.", "active": true},
+  {"id": "ELABO-HR3", "label": "ELABO-Ausstattung HR-3", "category": "elabo", "initialLocation": "HR-3", "note": "Ziel U8.", "active": true},
+  {"id": "STUEHLE-HR3", "label": "Stühle HR-3", "category": "chairs", "initialLocation": "HR-3", "note": "Ziel U8.", "active": true},
+  {"id": "DOZENT-HR4-3", "label": "Dozententisch HR-4 Nr. 3", "category": "lecturer", "initialLocation": "HR-4", "note": "Ersetzt den zu entsorgenden Dozententisch aus HR-3.", "active": true},
+  {"id": "SCHRANK-U8", "label": "Schrankpaket U8", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "CT-HR6", "label": "Clevertouch HR-6", "category": "display", "initialLocation": "HR-6", "note": "Endgerät U9.", "active": true},
+  {"id": "MOEBEL-HR5-U9", "label": "Tische und Stühle HR-5", "category": "tables", "initialLocation": "HR-5", "note": "Mit HR-6 abgleichen.", "active": true},
+  {"id": "MOEBEL-HR6-U9", "label": "Tische und Stühle HR-6", "category": "tables", "initialLocation": "HR-6", "note": "Mit HR-5 abgleichen.", "active": true},
+  {"id": "RESERVE-HR13-U9", "label": "Reserveausstattung HR-13", "category": "tables", "initialLocation": "HR-13", "note": "Nur falls HR-5 und HR-6 nicht passend kombiniert werden können.", "active": true},
+  {"id": "DOZENT-HR6", "label": "Dozententisch HR-6", "category": "lecturer", "initialLocation": "HR-6", "note": "Ziel U9.", "active": true},
+  {"id": "SCHRANK-U9", "label": "Schrankpaket U9", "category": "cabinet", "initialLocation": "OFFEN", "note": "Bedarf und Herkunft offen.", "active": true},
+  {"id": "MOEBEL-A1", "label": "Tische und Stühle Büro A1", "category": "tables", "initialLocation": "HR-BUERO", "note": "Alte, bereits höhenverstellbare Tische und alte Stühle.", "active": true},
+  {"id": "SCHRAENKE-A1", "label": "Alte Schränke Büro A1", "category": "cabinet", "initialLocation": "HR-BUERO", "note": "Neue Schränke erst 2027.", "active": true},
+  {"id": "IT-A1", "label": "PC, Monitore und Peripherie A1", "category": "it", "initialLocation": "HR-BUERO", "note": "Abbau und Aufbau noch zu klären.", "active": true},
+  {"id": "TISCHE-A2", "label": "4 höhenverstellbare Tische A2", "category": "tables", "initialLocation": "OFFEN", "note": "Aktueller Standort beziehungsweise Lieferstatus nicht eindeutig.", "active": true},
+  {"id": "STUEHLE-A2", "label": "4 bestellte Stühle A2", "category": "chairs", "initialLocation": "BESCHAFFUNG", "note": "Liefertermin unbekannt.", "active": true},
+  {"id": "SCHRAENKE-A2", "label": "Alte Schränke Büro A2", "category": "cabinet", "initialLocation": "HR-BUERO", "note": "Auswahl noch offen; neue Schränke erst 2027.", "active": true},
+  {"id": "IT-A2", "label": "PC, Monitore und Peripherie A2", "category": "it", "initialLocation": "HR-BUERO", "note": "Abbau und Aufbau noch zu klären.", "active": true},
+  {"id": "KUECHE-BESTAND", "label": "Kleine Küche FI", "category": "other", "initialLocation": "FI-KUECHE", "note": "Wird nicht im allgemeinen Ausbildungsbereich gestrichen.", "active": true},
+  {"id": "KUECHENGERAETE", "label": "Mikrowelle, Wasserkocher und Kleingeräte", "category": "other", "initialLocation": "HR-BUERO", "note": "Umfang und Ziel noch festlegen.", "active": true},
+  {"id": "ROBOTER-HR13", "label": "Roboter HR-13", "category": "special", "initialLocation": "HR-13", "note": "Achsen in Transportstellung sichern, Gewicht/Schwerpunkt der Spedition ansagen, Steuerschrank und Handbediengerät zusammenhalten.", "active": true},
+  {"id": "MOEBEL-AUFENTHALT", "label": "Tische und Stühle Aufenthaltsraum", "category": "tables", "initialLocation": "HR-AUFENTHALT", "note": "Aufenthaltsraum entfällt in FI ersatzlos.", "active": true},
+  {"id": "MOEBEL-HR7-ALT", "label": "Alte Tische und Stühle HR-7", "category": "tables", "initialLocation": "HR-7", "note": "Verschrottung; Stühle vorher prüfen, ob brauchbar.", "active": true},
+  {"id": "TISCH-HR7-MOBIL", "label": "Höhenverstellbarer mobiler Tisch HR-7", "category": "tables", "initialLocation": "HR-7", "note": "Wird gerettet, Ziel offen — Kandidat für U3/U4.", "active": true},
+  {"id": "DOZENT-HR3-ALT", "label": "Alter Dozententisch HR-3", "category": "lecturer", "initialLocation": "HR-3", "note": "Wird entsorgt; Ersatz kommt aus HR-4 (Nr. 3).", "active": true}
+ ],
+ "moves": [
+  {"id": "mv-ct13-u1", "assetId": "CT-HR13", "from": "HR-13", "to": "FI-U1", "eventId": "ev_move_sh", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Bereits für den Umzug vorbereitet."},
+  {"id": "mv-flip-u1", "assetId": "FLIP-U1", "from": "OFFEN", "to": "FI-U1", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "sauter", "note": "Vorhandensein prüfen."},
+  {"id": "mv-schrank-u1", "assetId": "SCHRANK-U1", "from": "OFFEN", "to": "FI-U1", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-moebel-u3", "assetId": "MOEBEL-FI-U2-U3", "from": "FI-U2", "to": "FI-U3", "eventId": "ev_early_rooms", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Überschuss U2."},
+  {"id": "mv-moebel-u4", "assetId": "MOEBEL-FI-U2-U4", "from": "FI-U2", "to": "FI-U4", "eventId": "ev_early_rooms", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Überschuss U2."},
+  {"id": "mv-beamer-u2", "assetId": "BEAMER-U2", "from": "FI-LAGER", "to": "FI-U2", "eventId": "ev_early_rooms", "date": "", "status": "planned", "actualDate": "", "responsible": "offen", "note": "Anfängliche Anzeige."},
+  {"id": "mv-ct4-u7", "assetId": "CT-HR4", "from": "HR-4", "to": "FI-U7", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Interimsgerät U7."},
+  {"id": "mv-ct4-u2", "assetId": "CT-HR4", "from": "FI-U7", "to": "FI-U2", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Nach Einbau CT-HR7 in U7."},
+  {"id": "mv-flip-u2", "assetId": "FLIP-U2", "from": "OFFEN", "to": "FI-U2", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "heilig", "note": "Vorhandensein prüfen."},
+  {"id": "mv-schrank-u2", "assetId": "SCHRANK-U2", "from": "OFFEN", "to": "FI-U2", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct12-u3", "assetId": "CT-HR12", "from": "HR-12", "to": "FI-U3", "eventId": "ev_hr12_move", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Ziel bestätigt, Termin offen."},
+  {"id": "mv-dozent-u3", "assetId": "DOZENT-U3", "from": "OFFEN", "to": "FI-U3", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Zuordnung offen."},
+  {"id": "mv-schrank-u3", "assetId": "SCHRANK-U3", "from": "OFFEN", "to": "FI-U3", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct1-u4", "assetId": "CT-HR1", "from": "HR-1", "to": "FI-U4", "eventId": "ev_frank_move", "date": "", "status": "open", "actualDate": "", "responsible": "spedition", "note": "Wenn Frank umzieht."},
+  {"id": "mv-dozent-u4", "assetId": "DOZENT-U4", "from": "OFFEN", "to": "FI-U4", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Zuordnung offen."},
+  {"id": "mv-schrank-u4", "assetId": "SCHRANK-U4", "from": "OFFEN", "to": "FI-U4", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct5-u5", "assetId": "CT-HR5", "from": "HR-5", "to": "FI-U5", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Endgerät U5."},
+  {"id": "mv-moebel11-u5", "assetId": "MOEBEL-HR11-U5", "from": "HR-11", "to": "FI-U5", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "9 Tische, 3 × 3."},
+  {"id": "mv-dozent11-u5", "assetId": "DOZENT-HR11", "from": "HR-11", "to": "FI-U5", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Dozententisch U5."},
+  {"id": "mv-i4-u5", "assetId": "I4-HR13A", "from": "HR-13A", "to": "FI-U5", "eventId": "ev_i4_move", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Termin offen."},
+  {"id": "mv-schrank-u5", "assetId": "SCHRANK-U5", "from": "OFFEN", "to": "FI-U5", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct11-u6", "assetId": "CT-HR11", "from": "HR-11", "to": "FI-U6", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Aufbau September."},
+  {"id": "mv-moebel4-u6", "assetId": "MOEBEL-HR4-U6", "from": "HR-4", "to": "FI-U6", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Aufbau September, Nutzung ab 26.10."},
+  {"id": "mv-dozent4-1-u6", "assetId": "DOZENT-HR4-1", "from": "HR-4", "to": "FI-U6", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Aufbau September."},
+  {"id": "mv-schrank-u6", "assetId": "SCHRANK-U6", "from": "OFFEN", "to": "FI-U6", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct7-u7", "assetId": "CT-HR7", "from": "HR-7", "to": "FI-U7", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Endgerät U7."},
+  {"id": "mv-stuehle-u7", "assetId": "STUEHLE-U7", "from": "OFFEN", "to": "FI-U7", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "lautier-skanda", "note": "Passende Stühle auswählen."},
+  {"id": "mv-dozent4-2-u7", "assetId": "DOZENT-HR4-2", "from": "HR-4", "to": "FI-U7", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Vor Nutzung U7."},
+  {"id": "mv-schrank-u7", "assetId": "SCHRANK-U7", "from": "OFFEN", "to": "FI-U7", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct3-u8", "assetId": "CT-HR3", "from": "HR-3", "to": "FI-U8", "eventId": "ev_u8_move", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Umzug am 21.09."},
+  {"id": "mv-elabo3-u8", "assetId": "ELABO-HR3", "from": "HR-3", "to": "FI-U8", "eventId": "ev_u8_move", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Umzug am 21.09."},
+  {"id": "mv-stuehle3-u8", "assetId": "STUEHLE-HR3", "from": "HR-3", "to": "FI-U8", "eventId": "ev_u8_move", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Umzug am 21.09."},
+  {"id": "mv-dozent4-3-u8", "assetId": "DOZENT-HR4-3", "from": "HR-4", "to": "FI-U8", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Ersetzt den entsorgten Dozententisch HR-3."},
+  {"id": "mv-schrank-u8", "assetId": "SCHRANK-U8", "from": "OFFEN", "to": "FI-U8", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-ct6-u9", "assetId": "CT-HR6", "from": "HR-6", "to": "FI-U9", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Endgerät U9."},
+  {"id": "mv-moebel5-u9", "assetId": "MOEBEL-HR5-U9", "from": "HR-5", "to": "FI-U9", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Mit HR-6 abgleichen."},
+  {"id": "mv-moebel6-u9", "assetId": "MOEBEL-HR6-U9", "from": "HR-6", "to": "FI-U9", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Mit HR-5 abgleichen."},
+  {"id": "mv-reserve13-u9", "assetId": "RESERVE-HR13-U9", "from": "HR-13", "to": "FI-U9", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "lautier-skanda", "note": "Nur falls benötigt."},
+  {"id": "mv-dozent6-u9", "assetId": "DOZENT-HR6", "from": "HR-6", "to": "FI-U9", "eventId": "ev_late_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Dozententisch U9."},
+  {"id": "mv-schrank-u9", "assetId": "SCHRANK-U9", "from": "OFFEN", "to": "FI-U9", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Schrankbedarf offen."},
+  {"id": "mv-moebel-a1", "assetId": "MOEBEL-A1", "from": "HR-BUERO", "to": "FI-A1", "eventId": "ev_offices", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Alte Möbel."},
+  {"id": "mv-schrank-a1", "assetId": "SCHRAENKE-A1", "from": "HR-BUERO", "to": "FI-A1", "eventId": "ev_offices", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Alte Schränke."},
+  {"id": "mv-it-a1", "assetId": "IT-A1", "from": "HR-BUERO", "to": "FI-A1", "eventId": "ev_offices", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Zuständigkeit klären."},
+  {"id": "mv-tische-a2", "assetId": "TISCHE-A2", "from": "OFFEN", "to": "FI-A2", "eventId": "ev_offices", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Status der Tische nicht eindeutig."},
+  {"id": "mv-stuehle-a2", "assetId": "STUEHLE-A2", "from": "BESCHAFFUNG", "to": "FI-A2", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Liefertermin unbekannt."},
+  {"id": "mv-schrank-a2", "assetId": "SCHRAENKE-A2", "from": "HR-BUERO", "to": "FI-A2", "eventId": "ev_offices", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Auswahl noch offen."},
+  {"id": "mv-it-a2", "assetId": "IT-A2", "from": "HR-BUERO", "to": "FI-A2", "eventId": "ev_offices", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Zuständigkeit klären."},
+  {"id": "mv-kueche", "assetId": "KUECHENGERAETE", "from": "HR-BUERO", "to": "FI-KUECHE", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Umfang und Termin offen."},
+  {"id": "mv-roboter-bg", "assetId": "ROBOTER-HR13", "from": "HR-13", "to": "BG5", "eventId": "ev_sep_wave", "date": "", "status": "planned", "actualDate": "", "responsible": "spedition", "note": "Im unbeheizten Lager abdecken, nicht direkt auf den Betonboden; vor Wiederinbetriebnahme prüfen."},
+  {"id": "mv-aufenthalt-bg", "assetId": "MOEBEL-AUFENTHALT", "from": "HR-AUFENTHALT", "to": "BG5", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Termin und Fuhre offen — evtl. mit der Roboterfahrt kombinieren."},
+  {"id": "mv-hr7-schrott", "assetId": "MOEBEL-HR7-ALT", "from": "HR-7", "to": "SCHROTT", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Entsorgung: wer beauftragt, wann, Budget; Elektroschrott getrennt; erst nach dem letzten Unterrichtstag."},
+  {"id": "mv-tisch-hr7-offen", "assetId": "TISCH-HR7-MOBIL", "from": "HR-7", "to": "OFFEN", "eventId": "", "date": "", "status": "open", "actualDate": "", "responsible": "offen", "note": "Ziel festlegen."},
+  {"id": "mv-dozent3-schrott", "assetId": "DOZENT-HR3-ALT", "from": "HR-3", "to": "SCHROTT", "eventId": "ev_u8_move", "date": "", "status": "planned", "actualDate": "", "responsible": "offen", "note": "Aussonderung beim Abbau HR-3."}
+ ],
+ "audit": [
+  {"at": "2026-09-02T12:00:00.000Z", "actor": "Sauter", "text": "V2.0: Umstellung auf GitHub Pages (Viewer liest data.json). Ergänzt: Roboter → BG, Aufenthaltsraum → BG, HR-7-Verschrottung, alter Dozententisch HR-3, geretteter Tisch HR-7, Wechsel-Ereignis Heilig/Albrecht (21.09. ≈), Schätztermine HR-1 (28.09. ≈), HR-12 (18.09. ≈), HR-13A (14.09. ≈), ELABO-Prüfung U8 als Ereignis ohne Datum; ≈-Kennzeichen an unsicheren Terminen."},
+  {"at": "2026-09-01T13:00:00.000Z", "actor": "Tobias / Rekonstruktion", "text": "Ausgangsdaten für Version 1.0 aus dem Chat rekonstruiert."}
+ ]
+}
+  </script>
+
+  <script>
+  (() => {
+    "use strict";
+    const seedElement = document.getElementById("seed-data");
+    const seed = JSON.parse(seedElement.textContent);
+    const printFormatKey = "ihk-umzugsplanung-elektro-v2-print-format";
+    const dayMs = 86400000;
+    let data = seed;
+    let popoverPinned = false;
+    let popoverKey = "";
+    let appearanceRegistry = new Map();
+    let toastTimer = 0;
+    let printFormat = "a3";
+
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const attr = esc;
+
+    function localTodayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+    function isoDay(iso) {
+      if (!iso) return null;
+      const [y,m,d] = iso.split("-").map(Number);
+      return Math.floor(Date.UTC(y,m-1,d)/dayMs);
+    }
+    function dayISO(day) {
+      return new Date(day*dayMs).toISOString().slice(0,10);
+    }
+    function formatDate(iso, long=false) {
+      if (!iso) return "Termin offen";
+      const [y,m,d] = iso.split("-").map(Number);
+      return new Intl.DateTimeFormat("de-DE", long ? {weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"} : {day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(y,m-1,d));
+    }
+    function formatTime(iso) {
+      if (!iso) return "—";
+      return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(iso));
+    }
+
+    function assetIcon(categoryId) {
+      const paths = {
+        display:'<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>',
+        beamer:'<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="17" cy="12" r="2.4"/><path d="M6 17l-1 3M18 17l1 3M7 11h3"/>',
+        tables:'<path d="M3 8h13v3H3zM5 11v9M14 11v9M18 10h3v6h-5v-4M18 16v4"/>',
+        chairs:'<path d="M7 4v8h10V7M7 12v3h10M9 15v5M15 15v5"/>',
+        lecturer:'<path d="M3 7h18v4H3zM5 11v9M19 11v9M8 15h8"/>',
+        cabinet:'<rect x="5" y="2.5" width="14" height="19" rx="1.5"/><path d="M5 12h14M11 8h1M12 16h1"/>',
+        elabo:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h4v4H7zM14 8h3M14 11h3M7 16h10"/>',
+        it:'<rect x="3" y="4" width="13" height="10" rx="1.5"/><path d="M7 18h6M10 14v4M18 6h3v14h-5v-4"/>',
+        special:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',
+        other:'<rect x="4" y="6" width="16" height="13" rx="2"/><path d="M8 10h8M8 14h5"/>'
+      };
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[categoryId] || paths.other}</svg>`;
+    }
+
+    let selectedISO = localTodayISO();
+
+    try {
+      const savedPrintFormat = localStorage.getItem(printFormatKey);
+      if (savedPrintFormat === "a3" || savedPrintFormat === "a4") printFormat = savedPrintFormat;
+    } catch (error) { console.warn("Druckformat konnte nicht geladen werden", error); }
+
+    function applyPrintFormat(format=printFormat) {
+      printFormat = format === "a4" ? "a4" : "a3";
+      document.body.classList.toggle("print-a4", printFormat === "a4");
+      document.body.classList.toggle("print-a3", printFormat === "a3");
+      $("#printPageStyle").textContent = printFormat === "a4" ? "@page{size:A4 landscape;margin:6mm}" : "@page{size:A3 landscape;margin:7mm}";
+      const select = $("#printFormatSelect");
+      if (select) select.value = printFormat;
+      try { localStorage.setItem(printFormatKey, printFormat); } catch (error) { console.warn("Druckformat konnte nicht gespeichert werden", error); }
+    }
+
+    function showToast(message, error=false) {
+      const node = $("#toast");
+      node.textContent = message;
+      node.style.background = error ? "var(--bad)" : "var(--brand-dark)";
+      node.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => node.hidden = true, 3200);
+    }
+
+    const locationById = id => data.locations.find(x => x.id === id);
+    const assetById = id => data.assets.find(x => x.id === id);
+    const eventById = id => data.events.find(x => x.id === id);
+    const personById = id => data.people.find(x => x.id === id);
+    const categoryById = id => data.categories.find(x => x.id === id);
+    const locationName = id => locationById(id)?.name || id || "offen";
+    const locationShort = id => ({"HR-BUERO":"HR-Büros","FI-LAGER":"FI-Lager","BESCHAFFUNG":"Beschaffung","OFFEN":"Herkunft offen","SCHROTT":"Verschrottung","BG5":"BG5"}[id] || (/^(HR|FI)-/.test(id||"") ? id : locationName(id)));
+    const personName = id => personById(id)?.name || id || "—";
+    function moveDate(move) { return move.date || eventById(move.eventId)?.date || ""; }
+    function activeMovesFor(assetId) { return data.moves.filter(x => x.assetId === assetId && x.status !== "cancelled"); }
+    const estMark = e => e && e.estimated ? " ≈" : "";
+    const moveEst = m => m && m.eventId ? estMark(eventById(m.eventId)) : "";
+
+    function sortMoves(moves) {
+      return moves.map((move,index) => ({move,index,date:moveDate(move),day:isoDay(moveDate(move))}))
+        .sort((a,b) => (a.day ?? Number.MAX_SAFE_INTEGER) - (b.day ?? Number.MAX_SAFE_INTEGER) || a.index-b.index);
+    }
+
+    function validateData() {
+      const issues = [];
+      const moveErrors = new Map();
+      const moveWarnings = new Map();
+      const add = (kind,title,detail,moveIds=[]) => {
+        issues.push({kind,title,detail,moveIds});
+        const map = kind === "error" ? moveErrors : moveWarnings;
+        moveIds.forEach(id => map.set(id, [...(map.get(id)||[]), title]));
+      };
+
+      for (const move of data.moves) {
+        if (!assetById(move.assetId)) add("error","Ausstattung fehlt",`Bewegung ${move.id} verweist auf ${move.assetId}.`,[move.id]);
+        if (!locationById(move.from) || !locationById(move.to)) add("error","Ort fehlt",`Quelle oder Ziel der Bewegung ${move.id} ist nicht in den Stammdaten.`,[move.id]);
+        if (!moveDate(move) && move.status !== "open" && move.status !== "cancelled") add("warning","Termin offen",`${assetById(move.assetId)?.label || move.assetId} hat noch kein Datum.`,[move.id]);
+      }
+
+      for (const asset of data.assets.filter(x => x.active !== false)) {
+        let current = asset.initialLocation;
+        const chain = sortMoves(activeMovesFor(asset.id));
+        for (const {move} of chain) {
+          if (move.from !== current && move.from !== "OFFEN" && current !== "OFFEN") {
+            add("error","Unmögliche Bewegungskette",`${asset.label} ist vor dieser Bewegung in ${locationName(current)} eingeplant, als Quelle wurde aber ${locationName(move.from)} gewählt.`,[move.id]);
+          }
+          current = move.to;
+        }
+      }
+
+      const checkpoints = [...new Set(data.moves.map(moveDate).filter(Boolean))].sort();
+      for (const iso of checkpoints) {
+        const occupancy = new Map();
+        for (const asset of data.assets.filter(x => x.active !== false)) {
+          const loc = plannedLocationAt(asset, iso);
+          const category = categoryById(asset.category);
+          if (!loc || !category?.capacity || !locationById(loc)?.visible?.match(/main|side/)) continue;
+          const key = `${loc}|${asset.category}`;
+          occupancy.set(key,[...(occupancy.get(key)||[]),asset]);
+        }
+        for (const [key, assets] of occupancy) {
+          const [loc,cat] = key.split("|");
+          const cap = categoryById(cat)?.capacity || 0;
+          if (cap && assets.length > cap) {
+            const ids = assets.flatMap(a => activeMovesFor(a.id).filter(m => moveDate(m) <= iso).slice(-1).map(m => m.id));
+            add("error",`Mehrfachbelegung ${locationName(loc)}`,`${assets.map(a=>a.label).join(", ")} sind am ${formatDate(iso)} gleichzeitig als ${categoryById(cat).name} eingeplant.`,ids);
+          }
+        }
+      }
+      return {issues,moveErrors,moveWarnings};
+    }
+
+    function plannedLocationAt(asset, iso) {
+      let loc = asset.initialLocation;
+      const selectedDay = isoDay(iso);
+      for (const {move,day} of sortMoves(activeMovesFor(asset.id))) if (day !== null && day <= selectedDay) loc = move.to;
+      return loc;
+    }
+    function actualLocationAt(asset, iso) {
+      let loc = asset.initialLocation;
+      const selectedDay = isoDay(iso);
+      for (const {move} of sortMoves(activeMovesFor(asset.id))) {
+        if (move.status !== "done") continue;
+        const actual = move.actualDate || moveDate(move);
+        if (actual && isoDay(actual) <= selectedDay) loc = move.to;
+      }
+      return loc;
+    }
+    function lastPlannedMoveTo(asset, loc, iso) {
+      return sortMoves(activeMovesFor(asset.id)).filter(x => x.day !== null && x.day <= isoDay(iso) && x.move.to === loc).at(-1)?.move || null;
+    }
+    function lastDoneMoveTo(asset, loc, iso) {
+      return sortMoves(activeMovesFor(asset.id)).filter(x => x.move.status === "done" && (x.move.actualDate || moveDate(x.move)) && isoDay(x.move.actualDate || moveDate(x.move)) <= isoDay(iso) && x.move.to === loc).at(-1)?.move || null;
+    }
+    function nextMoveAfter(asset, iso) {
+      const day = isoDay(iso);
+      return sortMoves(activeMovesFor(asset.id)).find(x => x.day === null || x.day > day)?.move || null;
+    }
+
+    function buildAppearances(iso, validation) {
+      const byLocation = new Map();
+      const push = (loc, appearance) => {
+        if (!locationById(loc)?.visible?.match(/main|side/)) return;
+        byLocation.set(loc,[...(byLocation.get(loc)||[]),appearance]);
+      };
+      for (const asset of data.assets.filter(x => x.active !== false)) {
+        const actualISO = localTodayISO();
+        const actualLoc = actualLocationAt(asset,actualISO);
+        const plannedLoc = plannedLocationAt(asset,iso);
+        const next = nextMoveAfter(asset,iso);
+        if (locationById(actualLoc)?.visible?.match(/main|side/)) {
+          const move = lastDoneMoveTo(asset,actualLoc,actualISO);
+          push(actualLoc,{asset,move,state:"present",location:actualLoc,direction:"",conflict:move ? validation.moveErrors.has(move.id) : false});
+        }
+        if (plannedLoc !== actualLoc && locationById(plannedLoc)?.visible?.match(/main|side/)) {
+          const move = lastPlannedMoveTo(asset,plannedLoc,iso);
+          push(plannedLoc,{asset,move,state:"due",location:plannedLoc,direction:"in",conflict:move ? validation.moveErrors.has(move.id) : false});
+        }
+        if (next && next.to !== actualLoc && next.to !== plannedLoc && locationById(next.to)?.visible?.match(/main|side/)) {
+          push(next.to,{asset,move:next,state:"future",location:next.to,direction:"in",conflict:validation.moveErrors.has(next.id)});
+        }
+      }
+      return byLocation;
+    }
+
+    function ownerAt(location, iso) {
+      if (location.ownerLabel) return location.ownerLabel;
+      if (!location.ownerFuture) return personName(location.ownerCurrent);
+      const changeDate = eventById(location.ownerChangeEvent)?.date || "";
+      if (changeDate && iso >= changeDate) return personName(location.ownerFuture);
+      if (!changeDate) return `${personName(location.ownerCurrent)} → später ${personName(location.ownerFuture)}`;
+      return personName(location.ownerCurrent);
+    }
+
+    function selectedEvents() { return data.events.filter(e => e.status !== "cancelled" && e.date === selectedISO); }
+    function renderView(validation) {
+      const selected = selectedEvents();
+      const selectedIds = new Set(selected.map(e=>e.id));
+      const eventMoves = data.moves.filter(m => m.status !== "cancelled" && (selectedIds.has(m.eventId) || (!m.eventId && m.date === selectedISO)));
+      const appearances = buildAppearances(selectedISO,validation);
+      appearanceRegistry = new Map();
+
+      function roomMarkup(location) {
+        const list = (appearances.get(location.id)||[]).sort((a,b) => data.categories.findIndex(c=>c.id===a.asset.category)-data.categories.findIndex(c=>c.id===b.asset.category) || a.asset.label.localeCompare(b.asset.label));
+        const hasConflict = list.some(x=>x.conflict);
+        const classes = ["room-card",location.type === "Praxis"?"praxis":"",location.visible === "side"?"side":"",hasConflict?"has-conflict":""].filter(Boolean).join(" ");
+        const itemHtml = list.map((app,index) => {
+          const moveIsSelected = app.move && (selectedIds.has(app.move.eventId) || (!app.move.eventId && app.move.date === selectedISO));
+          const sourceSelected = eventMoves.some(m => m.assetId === app.asset.id && m.from === location.id);
+          const key = `${location.id}|${app.asset.id}|${app.state}|${index}`;
+          const direction = moveIsSelected ? "in" : sourceSelected ? "out" : app.direction;
+          const dueISO = app.move ? moveDate(app.move) : "";
+          const incomplete = !!app.move && !["done","cancelled"].includes(app.move.status);
+          const atOrAfterDue = !!dueISO && isoDay(dueISO) <= isoDay(selectedISO);
+          const overdue = incomplete && atOrAfterDue && dueISO < localTodayISO();
+          const newlyActive = incomplete && app.state === "due" && atOrAfterDue;
+          const visualState = app.conflict ? "conflict" : sourceSelected ? "due" : overdue ? "overdue" : app.state;
+          const activeEventChange = (moveIsSelected && incomplete) || sourceSelected;
+          const eventClass = activeEventChange ? ` event-change${sourceSelected?" event-out":""}` : "";
+          let statusHtml = "";
+          let statusLabel = visualState === "present" ? "fertig" : visualState === "future" ? "kommt später" : "fällig";
+          if(app.conflict){statusHtml='<span class="asset-status conflict">! KONFLIKT</span>';statusLabel="Konflikt"}
+          else if(sourceSelected){statusHtml='<span class="asset-status out">→ RAUS</span>';statusLabel="geht bei diesem Termin heraus"}
+          else if(overdue){statusHtml='<span class="asset-status overdue">ÜBERFÄLLIG</span>';statusLabel="überfällig"}
+          else if(newlyActive){statusHtml='<span class="asset-status">+ NEU</span>';statusLabel="neu ab diesem Termin"}
+          appearanceRegistry.set(key,{...app,direction,eventSelected:moveIsSelected||sourceSelected,visualState,statusLabel});
+          const source = app.move ? `von ${locationShort(app.move.from)}` : `Bestand ${locationShort(app.asset.initialLocation)}`;
+          const timing = app.move ? (app.move.status==="done"&&app.move.actualDate?`${formatDate(app.move.actualDate)} Ist`:(dueISO?formatDate(dueISO)+moveEst(app.move):"Termin offen")) : "bereits vorhanden";
+          return `<button class="asset-tile ${visualState}${eventClass}" type="button" data-appearance="${attr(key)}" aria-label="${attr(app.asset.label)}, ${attr(source)}, ${attr(timing)}, ${attr(statusLabel)}"><span class="asset-icon">${assetIcon(app.asset.category)}</span><span class="asset-body"><span class="asset-top"><span class="asset-name">${esc(app.asset.label)}</span>${statusHtml}</span><span class="asset-meta"><span>${esc(source)}</span><span>· ${esc(timing)}</span></span></span></button>`;
+        }).join("") || `<div class="empty-room">Keine Ausstattung eingetragen</div>`;
+        return `<article class="${classes}" data-room="${attr(location.id)}"><header class="room-head"><div><div class="room-kicker">${esc(location.type||location.kind)}</div><h2 class="room-title">${esc(location.name)}</h2></div><div class="room-owner">${esc(ownerAt(location,selectedISO))}</div></header><div class="room-use">${esc(location.use||"")}</div><div class="room-items">${itemHtml}</div></article>`;
+      }
+
+      const main = data.locations.filter(x=>x.visible==="main"&&x.active!==false);
+      const side = data.locations.filter(x=>x.visible==="side"&&x.active!==false);
+      $("#mainRooms").innerHTML = main.map(roomMarkup).join("");
+      $("#sideRooms").innerHTML = `<p class="side-label">Büros und Nebenraum</p>` + side.map(roomMarkup).join("");
+      $("#selectedDateLabel").textContent = formatDate(selectedISO,true);
+      const today = localTodayISO();
+      $("#selectedDateHint").textContent = selectedISO === today ? "Aktueller Stand laut Systemdatum" : selectedISO > today ? "Planvorschau für dieses Datum" : "Rückblick auf den Planstand";
+      const printTitle = selected.length ? selected.map(e=>e.title+estMark(e)).join(" · ") : "Kein Ereignis an diesem Datum";
+      const responsible = [...new Set(selected.map(e=>personName(e.responsible)).filter(Boolean))];
+      const printDetails = [eventMoves.length ? `${eventMoves.length} Ausstattungsänderung${eventMoves.length===1?"":"en"}` : "Keine Änderung an der Ausstattung", responsible.length ? `Zuständig: ${responsible.join(", ")}` : ""].filter(Boolean);
+      $("#printEventTitle").textContent = `${formatDate(selectedISO,true)} · ${printTitle}`;
+      $("#printEventDetail").textContent = printDetails.join(" · ");
+      $("#printGenerated").textContent = `Datenstand: ${formatTime(data.updatedAt)}`;
+      bindAssetTiles();
+      renderTimeline(validation);
+    }
+
+    function timelineBounds() {
+      const days = [isoDay(localTodayISO()),...data.events.map(e=>isoDay(e.date)).filter(x=>x!==null),...data.moves.map(m=>isoDay(moveDate(m))).filter(x=>x!==null)];
+      const min = Math.min(...days)-3, max = Math.max(...days)+14;
+      return {min,max};
+    }
+    function percent(day,min,max) { return Math.max(0,Math.min(100,(day-min)/(max-min)*100)); }
+    function renderTimeline(validation) {
+      const {min,max}=timelineBounds();
+      const selectedDay=Math.max(min,Math.min(max,isoDay(selectedISO)));
+      selectedISO=dayISO(selectedDay);
+      const range=$("#dateRange"); range.min=min; range.max=max; range.value=selectedDay;
+      const selectedPct=percent(selectedDay,min,max);
+      $("#thumbBubble").style.left=`${selectedPct}%`; $("#thumbBubble").textContent=formatDate(selectedISO);
+      $("#timelineDate").textContent=formatDate(selectedISO);
+      $("#todayLine").style.left=`${percent(isoDay(localTodayISO()),min,max)}%`;
+      const grouped = new Map();
+      data.events.filter(e=>e.date&&e.status!=="cancelled").forEach(e=>grouped.set(e.date,[...(grouped.get(e.date)||[]),e]));
+      const knownDates=[...grouped.keys()].sort();
+      $("#markers").innerHTML=knownDates.map(iso=>{
+        const events=grouped.get(iso); const linked=data.moves.filter(m=>events.some(e=>e.id===m.eventId));
+        const conflict=linked.some(m=>validation.moveErrors.has(m.id));
+        const statuses=events.map(e=>e.status), moveStatuses=linked.filter(m=>m.status!=="cancelled").map(m=>m.status);
+        const allLinkedDone=moveStatuses.length>0&&moveStatuses.every(s=>s==="done"), someLinkedDone=moveStatuses.some(s=>s==="done");
+        const est=events.every(e=>e.estimated);
+        const cls=conflict?"conflict":(statuses.every(s=>s==="done")&&(moveStatuses.length===0||allLinkedDone))?"done":(statuses.some(s=>s==="partial"||s==="done")||someLinkedDone)?"partial":"planned";
+        const label=`${formatDate(iso)}${events.some(e=>e.estimated)?" ≈":""}: ${events.map(e=>e.title).join("; ")}`;
+        return `<button class="event-marker ${cls}${est?" est":""}${iso===selectedISO?" selected":""}" style="left:${percent(isoDay(iso),min,max)}%" data-date="${iso}" aria-label="${attr(label)}" title="${attr(label)}"></button>`;
+      }).join("");
+      const unknown=data.events.filter(e=>!e.date&&e.status!=="cancelled").length;
+      $("#unknownEvents").textContent=unknown?`${unknown} Ereignis${unknown===1?"":"se"} ohne Datum`:""; $("#unknownEvents").hidden=!unknown;
+      const previous=knownDates.filter(x=>x<selectedISO).at(-1), next=knownDates.find(x=>x>selectedISO);
+      $("#prevEventBtn").disabled=!previous; $("#nextEventBtn").disabled=!next;
+
+      const events=grouped.get(selectedISO)||[];
+      const moves=data.moves.filter(m=>m.status!=="cancelled"&&(events.some(e=>e.id===m.eventId)||(!m.eventId&&m.date===selectedISO)));
+      if(events.length){
+        const title=(events.length===1?events[0].title:`${events.length} Ereignisse an diesem Tag`)+(events.some(e=>e.estimated)?" ≈":"");
+        const chips=moves.map(m=>`${locationName(m.to)}: ${assetById(m.assetId)?.label||m.assetId}`).slice(0,8);
+        const extra=moves.length-chips.length;
+        $("#eventSummary").innerHTML=`<h2>${esc(formatDate(selectedISO,true))} · ${esc(title)}</h2><p>${moves.length?`${moves.length} geplante Veränderung${moves.length===1?"":"en"}`:"Meilenstein ohne einzelne Ausstattung"}</p><div class="event-changes">${chips.map(x=>`<span class="change-chip">${esc(x)}</span>`).join("")}${extra>0?`<span class="change-chip">+ ${extra} weitere</span>`:""}</div>`;
+      }else{
+        const nextText=next?`Nächstes Ereignis: ${formatDate(next)} · ${grouped.get(next)[0].title}`:"Kein weiteres Ereignis mit Datum.";
+        $("#eventSummary").innerHTML=`<h2>${esc(formatDate(selectedISO,true))} · kein Ereignis</h2><p>${esc(nextText)}</p>`;
+      }
+      $$(".event-marker").forEach(btn=>btn.addEventListener("click",()=>setSelectedDate(btn.dataset.date,true)));
+    }
+
+    function setSelectedDate(iso,flash=false){
+      selectedISO=iso;hidePopover();renderView(validateData());
+      if(flash){
+        const rooms=new Set(selectedEvents().flatMap(e=>e.affectedRooms||[]));
+        rooms.forEach(id=>{const card=$(`.room-card[data-room="${id}"]`);if(card)card.classList.add("event-flash");});
+        setTimeout(()=>$$('.room-card.event-flash').forEach(x=>x.classList.remove('event-flash')),900);
+      }
+    }
+    function jumpEvent(direction){const dates=[...new Set(data.events.filter(e=>e.date&&e.status!=="cancelled").map(e=>e.date))].sort();const target=direction>0?dates.find(x=>x>selectedISO):dates.filter(x=>x<selectedISO).at(-1);if(target)setSelectedDate(target,true)}
+
+    function bindAssetTiles(){
+      $$(".asset-tile").forEach(tile=>{
+        tile.addEventListener("mouseenter",()=>{if(!popoverPinned)showPopover(tile.dataset.appearance,tile,false)});
+        tile.addEventListener("mouseleave",()=>{if(!popoverPinned)hidePopover()});
+        tile.addEventListener("focus",()=>{if(!popoverPinned)showPopover(tile.dataset.appearance,tile,false)});
+        tile.addEventListener("blur",()=>{if(!popoverPinned)hidePopover()});
+        tile.addEventListener("click",()=>{popoverPinned=true;showPopover(tile.dataset.appearance,tile,true)});
+      });
+    }
+    function showPopover(key,anchor,pin){
+      const app=appearanceRegistry.get(key); if(!app)return;
+      popoverKey=key; const asset=app.asset, move=app.move, event=move?eventById(move.eventId):null;
+      const stateLabel=app.statusLabel||{present:"fertig / bestätigt vorhanden",due:"ab diesem Termin fällig",future:"kommt später",overdue:"überfällig"}[app.visualState||app.state]||app.state;
+      $("#popoverContent").innerHTML=`<h3>${esc(asset.label)}</h3><dl><dt>ID</dt><dd>${esc(asset.id)}</dd><dt>Kategorie</dt><dd>${esc(categoryById(asset.category)?.name||asset.category)}</dd><dt>Herkunft</dt><dd>${esc(move?locationName(move.from):locationName(asset.initialLocation))}</dd><dt>Ziel</dt><dd>${esc(move?locationName(move.to):locationName(asset.initialLocation))}</dd><dt>Termin</dt><dd>${esc(move?(moveDate(move)?formatDate(moveDate(move))+moveEst(move):"offen"):"bereits vorhanden")}</dd><dt>Ereignis</dt><dd>${esc(event?event.title+estMark(event):"—")}</dd><dt>Status</dt><dd>${esc(stateLabel)}${app.conflict?" · Konflikt":""}</dd></dl>${asset.note||move?.note?`<p class="popover-note">${esc(move?.note||asset.note)}</p>`:""}`;
+      const pop=$("#assetPopover");pop.hidden=false;pop.classList.toggle("pinned",pin);
+      const rect=anchor.getBoundingClientRect();const width=Math.min(330,window.innerWidth-24);let left=Math.min(window.innerWidth-width-12,Math.max(12,rect.left));let top=rect.bottom+8;if(top+260>window.innerHeight)top=Math.max(12,rect.top-268);pop.style.left=`${left}px`;pop.style.top=`${top}px`;
+    }
+    function hidePopover(){popoverPinned=false;popoverKey="";$("#assetPopover").hidden=true;$("#assetPopover").classList.remove("pinned")}
+
+    function renderAudit(){
+      $("#auditList").innerHTML=(data.audit||[]).map(x=>`<div class="audit-row"><time>${esc(formatTime(x.at))}</time><div class="who">${esc(x.actor||"—")}</div><div>${esc(x.text)}</div></div>`).join("")||"<p>Noch keine Änderungen.</p>";
+    }
+    function renderAll(){
+      const validation=validateData();
+      $("#systemDate").textContent=formatDate(localTodayISO());
+      $("#dataTimestamp").textContent=formatTime(data.updatedAt);
+      renderView(validation);renderAudit();
+    }
+
+    async function fetchRemote(){
+      if (typeof fetch !== "function") return null;
+      try{
+        const response = await fetch(`data.json?ts=${Date.now()}`, {cache:"no-store"});
+        if(!response.ok) return null;
+        const remote = await response.json();
+        if(!remote || remote.schemaVersion !== seed.schemaVersion) return null;
+        return remote;
+      }catch(error){ return null; }
+    }
+    async function refresh(initial=false){
+      const remote = await fetchRemote();
+      if(remote){
+        if(remote.updatedAt !== data.updatedAt){
+          data = remote;
+          renderAll();
+          if(!initial) showToast(`Neuer Stand geladen: ${formatTime(data.updatedAt)}`);
+        }
+      } else if(initial && location.protocol !== "file:") {
+        showToast("Aktueller Stand nicht abrufbar — angezeigt wird der in der Datei eingebettete Stand.", true);
+      }
+    }
+
+    $$(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{$$(".nav-btn").forEach(x=>x.classList.toggle("active",x===btn));$$(".panel").forEach(x=>x.classList.toggle("active",x.id===`panel-${btn.dataset.panel}`));hidePopover()}));
+    $("#dateRange").addEventListener("input",event=>setSelectedDate(dayISO(Number(event.target.value))));
+    $("#dateRange").addEventListener("keydown",event=>{if(event.key==="ArrowRight"||event.key==="ArrowLeft"){event.preventDefault();event.stopPropagation();jumpEvent(event.key==="ArrowRight"?1:-1)}});
+    $("#prevEventBtn").addEventListener("click",()=>jumpEvent(-1));$("#nextEventBtn").addEventListener("click",()=>jumpEvent(1));$("#todayBtn").addEventListener("click",()=>setSelectedDate(localTodayISO(),true));
+    $("#popoverClose").addEventListener("click",hidePopover);document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"){hidePopover();return}
+      if(event.key!=="ArrowRight"&&event.key!=="ArrowLeft")return;
+      if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
+      if(!$("#panel-view").classList.contains("active"))return;
+      if(event.target.closest("input:not([type='range']), select, textarea, [contenteditable='true']"))return;
+      event.preventDefault();jumpEvent(event.key==="ArrowRight"?1:-1);
+    });
+    $("#printFormatSelect").addEventListener("change",event=>applyPrintFormat(event.target.value));
+    window.addEventListener("beforeprint",()=>applyPrintFormat($("#printFormatSelect").value));
+    $("#printBtn").addEventListener("click",()=>{hidePopover();applyPrintFormat($("#printFormatSelect").value);window.print()});
+
+    applyPrintFormat(printFormat);
+    renderAll();
+    refresh(true);
+    setInterval(()=>refresh(false), 5*60*1000);
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh(false)});
+  })();
+  </script>
+</body>
+</html>
