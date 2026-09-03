@@ -9,6 +9,9 @@ Interaktiver Umzugsplan der Elektroabteilung (IHK Akademie Schwaben), Umzugszeit
 | Datei | Zweck |
 |---|---|
 | `index.html` | Hauptansicht: waagerechter Zeitstrahl (Fischgräte). Oben Voraussetzungen und Quellseite (HR, Fremdfirmen, IT, Elektro), unten Ankunft und Nutzung in FI je Termin × Zielraum, dazu „Noch ohne Termin“. Wird direkt ausgeliefert und liest `data.json`. |
+| `timeline.css` | Darstellung und Druck-CSS des Zeitstrahls. |
+| `timeline-engine.js` | Datenmodell, Termin-/Lane-Logik und geometrische Anordnung des Zeitstrahls. |
+| `timeline-ui.js` | Rendering, Popover, Drag-/Scroll-Navigation, Aktualisierung und Bedienlogik des Zeitstrahls. |
 | `raumansicht.html` | Zweite Ansicht: Raumbild Finninger Straße zum gewählten Stichtag, kleiner Zeitstrahl mit Ereignissen, Popover-Details und Druck A3/A4 quer. Wird direkt ausgeliefert und besitzt zusätzlich einen eingebetteten Fallback-Datenstand für die lokale Nutzung. |
 | `timeline.html` | Kompatibilitätslink für ältere Zeitstrahl-URLs; leitet direkt auf `index.html` weiter. |
 | `data.json` | Der einzige Datenbestand: Räume, Ausstattung, Bewegungen, Ereignisse, Änderungsprotokoll. Jede Datenpflege ist ein Commit auf diese Datei. |
