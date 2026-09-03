@@ -8,13 +8,12 @@ Interaktiver Umzugsplan der Elektroabteilung (IHK Akademie Schwaben), Umzugszeit
 
 | Datei | Zweck |
 |---|---|
-| `index.html` | Hauptansicht: waagerechter Zeitstrahl (Fischgräte). Oben Voraussetzungen und Quellseite (HR, Fremdfirmen, IT, Elektro), unten Ankunft und Nutzung in FI je Termin × Zielraum, dazu „Noch ohne Termin“. |
-| `raumansicht.html` | Zweite Ansicht: Raumbild Finninger Straße zum gewählten Stichtag, kleiner Zeitstrahl mit Ereignissen, Popover-Details und Druck A3/A4 quer. |
-| `raumansicht-basis.html` | Unveränderter technischer Kern der bisherigen Raumansicht. Wird von `raumansicht.html` geladen; nicht direkt verlinken. |
-| `timeline.html` | Kompatibler Direktlink auf dieselbe Zeitstrahlansicht wie `index.html`. |
+| `index.html` | Hauptansicht: waagerechter Zeitstrahl (Fischgräte). Oben Voraussetzungen und Quellseite (HR, Fremdfirmen, IT, Elektro), unten Ankunft und Nutzung in FI je Termin × Zielraum, dazu „Noch ohne Termin“. Wird direkt ausgeliefert und liest `data.json`. |
+| `raumansicht.html` | Zweite Ansicht: Raumbild Finninger Straße zum gewählten Stichtag, kleiner Zeitstrahl mit Ereignissen, Popover-Details und Druck A3/A4 quer. Wird direkt ausgeliefert und besitzt zusätzlich einen eingebetteten Fallback-Datenstand für die lokale Nutzung. |
+| `timeline.html` | Kompatibilitätslink für ältere Zeitstrahl-URLs; leitet direkt auf `index.html` weiter. |
 | `data.json` | Der einzige Datenbestand: Räume, Ausstattung, Bewegungen, Ereignisse, Änderungsprotokoll. Jede Datenpflege ist ein Commit auf diese Datei. |
 
-Beide Ansichten lesen den aktuellen Stand aus `data.json`. Der Zeitstrahl hat keinen eingebetteten Datenstand; die Raumansicht besitzt weiterhin ihren bisherigen eingebetteten Fallback.
+Beide Ansichten lesen den aktuellen Stand aus `data.json`. Es gibt keine vorgeschalteten Loader- oder Basisdateien mehr. Die Raumansicht besitzt weiterhin ihren bisherigen eingebetteten Fallback, falls `data.json` lokal nicht erreichbar ist.
 
 ## Rollen
 
