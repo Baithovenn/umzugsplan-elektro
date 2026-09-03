@@ -205,21 +205,75 @@ else showToast(`Neuer Stand geladen: ${formatTime(data.updatedAt)}`)}
 }
 else if(initial)$("#canvas").innerHTML='<div class="empty-state">Der aktuelle Stand (data.json) konnte nicht geladen werden. Diese Seite braucht die Datei neben sich, zum Beispiel über den GitHub-Pages-Link.</div>'}
 
-    let savedScroll=0;
+    // Druck: Fenster ab Heute auf ein Blatt A3 quer. Es kommen so viele Knoten mit, wie bei
+    // Maßstab >= PRINT.minScale vollständig aufs Blatt passen; kein Anschnitt, der Rest wird
+    // weggelassen und in der Kopfzeile als "weiter ab ..." genannt. Der Ohne-Termin-Block wird
+    // nicht gedruckt. Am Bildschirm ändert sich nichts, nach dem Druck wird die volle Fläche
+    // wiederhergestellt.
+    const PRINT={pageW:1500,pageH:1000,minScale:0.8,pad:24};
+let savedScroll=0,savedModel=null,savedGeo=null,savedMeta="",printActive=false;
+function printWindow(today){
+const t=TL.isoDay(today),G=TL.GEO,ahead=k=>TL.isoDay(k.endDate||k.date)>=t;
+const total=TL.buildModel(data,today).knots.filter(ahead);
+if(!total.length)return null;
+let best=null;
+for(let n=1;n<=total.length;n++){
+const m=TL.buildModel(data,today);
+m.knots=m.knots.filter(ahead).slice(0,n);
+const g=TL.layout(m);
+const xs=[...g.cards.map(c=>c.x),...m.knots.map(k=>k.x-60)],xe=[...g.cards.map(c=>c.x+G.cardW),...m.knots.map(k=>k.x+60)];
+if(g.todayX!==null){
+xs.push(g.todayX-6);
+xe.push(g.todayX+6)}
+const minX=Math.min(...xs)-PRINT.pad,w=Math.max(...xe)+PRINT.pad-minX,s=Math.min(1,PRINT.pageW/w,PRINT.pageH/g.height);
+const cand={model:m,geo:g,minX,w,s,n,next:total[n]||null};
+if(n===1||s>=PRINT.minScale)best=cand;
+else break}
+return best}
 function fitForPrint(){
-if(!geo)return;
-const canvas=$("#canvas"),wrap=$("#canvasScroll");
+if(!data||!geo||printActive)return;
+const today=localTodayISO(),wrap=$("#canvasScroll"),canvas=$("#canvas"),win=printWindow(today);
+printActive=true;
 savedScroll=wrap.scrollLeft;
+savedModel=model;
+savedGeo=geo;
+savedMeta=$("#printMeta").textContent;
+$("#undated").style.display="none";
+if(!win){
 wrap.scrollLeft=0;
-const pageW=1520,pageH=1050,s=Math.min(1,pageW/geo.width,pageH/geo.height);
+const s=Math.min(1,PRINT.pageW/geo.width,PRINT.pageH/geo.height);
 canvas.style.zoom=String(s);
 wrap.style.height=`${Math.ceil(geo.height*s)}px`;
-wrap.style.width=`${Math.ceil(geo.width*s)}px`}
+wrap.style.width=`${Math.ceil(geo.width*s)}px`;
+return}
+const m=win.model,g=win.geo;
+for(const c of g.cards)c.x-=win.minX;
+for(const k of m.knots)k.x-=win.minX;
+for(const b of g.breaks)b.x-=win.minX;
+if(g.todayX!==null)g.todayX-=win.minX;
+g.width=win.w;
+model=m;
+geo=g;
+renderCanvas();
+wrap.scrollLeft=0;
+canvas.style.zoom=String(win.s);
+wrap.style.height=`${Math.ceil(g.height*win.s)}px`;
+wrap.style.width=`${Math.ceil(g.width*win.s)}px`;
+const first=m.knots[0],last=m.knots.at(-1);
+$("#printMeta").textContent=`Datenstand ${formatTime(data.updatedAt)} · gedruckt ${TL.fmtLong(today)} · Zeitraum ${TL.fmtRange(first.date,last.endDate||last.date)} · ${win.next?`weiter mit ${TL.fmtRange(win.next.date,win.next.endDate)} am Bildschirm`:"Ende des Plans"}`}
 function unfitPrint(){
-const canvas=$("#canvas"),wrap=$("#canvasScroll");
+if(!printActive)return;
+printActive=false;
+const wrap=$("#canvasScroll"),canvas=$("#canvas");
 canvas.style.zoom="";
 wrap.style.height="";
 wrap.style.width="";
+$("#undated").style.display="";
+if(savedModel&&savedGeo){
+model=savedModel;
+geo=savedGeo;
+renderCanvas()}
+$("#printMeta").textContent=savedMeta;
 wrap.scrollLeft=savedScroll}
 
     $("#prevBtn").addEventListener("click",()=>jumpKnot(-1));
