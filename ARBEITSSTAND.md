@@ -10,11 +10,13 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 - Nur kurz festhalten, was tatsächlich geändert oder entschieden wurde. Keine langen Protokolle und keine Vermutungen.
 - `data.json` bleibt der einzige Datenbestand für Räume, Ausstattung, Bewegungen, Ereignisse und Audit.
 - `index.html` nur auf ausdrücklichen Auftrag ändern.
+- `timeline.html` ist die zweite Ansicht (Zeitstrahl); Layoutregeln stehen im Kommentar des Engine-Skripts und unten im Stand vom 03.09.2026.
 
 ## Letzter Stand
 
 **03.09.2026**
 
+- `timeline.html` V1 angelegt (Zeitstrahl, Fischgräte). Regeln: ein Knoten je Starttag, Beschriftung „von–bis" wenn Ereignisse dort ein `endDate` haben; Abstände 1–5 Einheiten je nach Tagesdifferenz, ab 15 Tagen Zeitbruch; oben eine Karte je Ereignis (Quellseite), unten eine Karte je Termin × Zielraum aus allen Bewegungen dieses Termins, Räume aus `affectedRooms` ohne Bewegung erscheinen mit „keine Ausstattung eingetragen"; Zeilen werden von rechts nach links vergeben, damit kein Stiel eine fremde Karte kreuzt; stornierte Ereignisse und Bewegungen werden nicht gezeigt; „Noch ohne Termin" mit Ereigniskarten und aggregierter Ausstattung (Herkunft `OFFEN`/`BESCHAFFUNG` nach Kategorie gezählt). Seite oben/unten per Heuristik, `timelineLane` wird gelesen, ist aber noch nirgends gesetzt. Druck A3 quer als Fit-to-width, dadurch klein; schmale Bildschirme bekommen eine senkrechte Liste. `index.html` und `data.json` unverändert.
 - Sicherheitsstand vor der Terminplan-Aktualisierung als Branch `backup-2026-09-03-vor-terminupdate` gesichert (Stand `0708272`).
 - Aktuellen abgestimmten Terminplan für FI/HRS eingearbeitet: Räume 1–4, Grundreinigung, Umzugswelle 14.–15.09., F7, F8, Büros und späte Umzugsphase ab 26.10.
 - FI-U5/FI-U6 korrigiert: 12 Tische aus HR-U4 nach F5, 9 Tische aus HR-U11 nach F6; Industrie 4.0 nach F6. Dozententische und Clevertouch-Zuordnung F5/F6 bleiben wie geplant.
@@ -42,3 +44,4 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 - Live-Ansicht: https://baithovenn.github.io/umzugsplan-elektro/
 - Datenbestand: `data.json`
 - Viewer: `index.html`
+- Zeitstrahl: `timeline.html` — https://baithovenn.github.io/umzugsplan-elektro/timeline.html
