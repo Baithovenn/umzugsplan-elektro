@@ -31,11 +31,11 @@ const G=TL.GEO,source=c.lane==="source",sx=source?c.x+G.cardW:c.x,sy=c.mid,ex=c.
 if(source)return`M${sx},${sy} C${sx+bend},${sy} ${ex-bend*.45},${ey-20} ${ex},${ey}`;
 return`M${ex},${ey} C${ex+bend*.45},${ey+20} ${sx-bend},${sy} ${sx},${sy}`}
 
-    function renderCanvas(){
-const G=TL.GEO,ks=model.knots;
-cardIndex.clear();
+    function renderCanvas(target){
+const G=TL.GEO,ks=model.knots,canvas=target||$("#canvas");
+if(!target)cardIndex.clear();
 if(!ks.length){
-$("#canvas").innerHTML='<div class="empty-state">Keine Termine mit Datum vorhanden.</div>';
+canvas.innerHTML='<div class="empty-state">Keine Termine mit Datum vorhanden.</div>';
 return}
 let svg=`<svg viewBox="0 0 ${geo.width} ${geo.height}" preserveAspectRatio="none" aria-hidden="true">`,xStart=20,xEnd=geo.width-G.padRight+10;
 svg+=`<line class="axis" x1="${xStart}" y1="${geo.axisY}" x2="${xEnd}" y2="${geo.axisY}"/>`;
@@ -49,13 +49,12 @@ for(const b of geo.breaks)html+=`<span class="break-label" style="left:${b.x}px;
 for(const k of ks)html+=`<div class="knot${k.estimated?" est":""}${k.done?" done":k.isToday?" today":k.overdue?" overdue":k.past?" past":""}" style="left:${k.x}px;top:${geo.axisY}px" title="${esc(k.events.map(e=>e.title).join("; "))}">${k.isToday?'<span class="today-word">Heute</span>':""}${k.estimated?"≈ ":""}${esc(k.label)}</div>`;
 if(geo.todayX!==null&&!ks.some(k=>k.isToday))html+=`<div class="knot today plain" style="left:${geo.todayX}px;top:${geo.axisY}px">Heute</div>`;
 for(const c of geo.cards){
-cardIndex.set(c.id,c);
+if(!target)cardIndex.set(c.id,c);
 html+=cardHtml(c,true)}
-const canvas=$("#canvas");
 canvas.style.width=`${geo.width}px`;
 canvas.style.height=`${geo.height}px`;
 canvas.innerHTML=html;
-bindCards(canvas)}
+if(!target)bindCards(canvas)}
 
     function renderList(){
 const ks=model.knots;
@@ -205,76 +204,90 @@ else showToast(`Neuer Stand geladen: ${formatTime(data.updatedAt)}`)}
 }
 else if(initial)$("#canvas").innerHTML='<div class="empty-state">Der aktuelle Stand (data.json) konnte nicht geladen werden. Diese Seite braucht die Datei neben sich, zum Beispiel über den GitHub-Pages-Link.</div>'}
 
-    // Druck: Fenster ab Heute auf ein Blatt A3 quer. Es kommen so viele Knoten mit, wie bei
-    // Maßstab >= PRINT.minScale vollständig aufs Blatt passen; kein Anschnitt, der Rest wird
-    // weggelassen und in der Kopfzeile als "weiter ab ..." genannt. Der Ohne-Termin-Block wird
-    // nicht gedruckt. Am Bildschirm ändert sich nichts, nach dem Druck wird die volle Fläche
-    // wiederhergestellt.
-    const PRINT={pageW:1500,pageH:1000,minScale:0.8,pad:24};
-let savedScroll=0,savedModel=null,savedGeo=null,savedMeta="",printActive=false;
-function printWindow(today){
-const t=TL.isoDay(today),G=TL.GEO,ahead=k=>TL.isoDay(k.endDate||k.date)>=t;
-const total=TL.buildModel(data,today).knots.filter(ahead);
-if(!total.length)return null;
-let best=null;
-for(let n=1;n<=total.length;n++){
-const m=TL.buildModel(data,today);
-m.knots=m.knots.filter(ahead).slice(0,n);
+    // Druck: der ganze Zeitstrahl auf Blätter A3 quer verteilt. Geschnitten wird nur zwischen
+    // Knoten, nie durch eine Karte: je Blatt so viele Knoten, wie bei Maßstab >= PRINT.minScale
+    // vollständig passen, eigenes Layout je Blatt, Maßstab höchstens 1,0. Jedes Blatt trägt Kopfzeile
+    // mit Seite x/y, Zeitraum, Anschluss ("weiter mit ..."), Datenstand, Druckdatum und Legende.
+    // Die Heute-Marke steht nur auf dem Blatt, in dessen Zeitraum Heute fällt. Der Ohne-Termin-Block
+    // wird nicht gedruckt. Am Bildschirm ändert sich nichts; die Seiten werden in beforeprint
+    // in #printPages gebaut und in afterprint wieder entfernt. Im Druckdialog lassen sich dann
+    // einzelne Seiten auswählen.
+    const PRINT={pageW:1500,pageH:940,minScale:0.8,pad:24};
+let printActive=false,savedScroll=0;
+if(!$("#printPagesStyle")){
+const st=document.createElement("style");
+st.id="printPagesStyle";
+st.textContent="#printPages{display:none}@media print{body.printing .page>*:not(#printPages){display:none!important}body.printing #printPages{display:block}.print-page{break-after:page;page-break-after:always}.print-page:last-child{break-after:auto;page-break-after:auto}.print-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0 0 6px;font-size:12px;color:var(--muted)}.print-head strong{font-size:15px;color:var(--ink)}.print-head .legend{margin-left:auto}.print-canvas-wrap{position:relative;overflow:hidden}.print-canvas-wrap .canvas{position:relative}}";
+document.head.appendChild(st)}
+function measurePage(today,i,n){
+const G=TL.GEO,m=TL.buildModel(data,today);
+m.knots=m.knots.slice(i,i+n);
 const g=TL.layout(m);
 const xs=[...g.cards.map(c=>c.x),...m.knots.map(k=>k.x-60)],xe=[...g.cards.map(c=>c.x+G.cardW),...m.knots.map(k=>k.x+60)];
 if(g.todayX!==null){
 xs.push(g.todayX-6);
 xe.push(g.todayX+6)}
 const minX=Math.min(...xs)-PRINT.pad,w=Math.max(...xe)+PRINT.pad-minX,s=Math.min(1,PRINT.pageW/w,PRINT.pageH/g.height);
-const cand={model:m,geo:g,minX,w,s,n,next:total[n]||null};
-if(n===1||s>=PRINT.minScale)best=cand;
+return{model:m,geo:g,minX,w,s,n,i}}
+function paginate(today){
+const all=TL.buildModel(data,today).knots,pages=[];
+let i=0;
+while(i<all.length){
+let best=null;
+for(let n=1;i+n<=all.length;n++){
+const cand=measurePage(today,i,n);
+if(n===1||cand.s>=PRINT.minScale)best=cand;
 else break}
-return best}
-function fitForPrint(){
-if(!data||!geo||printActive)return;
-const today=localTodayISO(),wrap=$("#canvasScroll"),canvas=$("#canvas"),win=printWindow(today);
-printActive=true;
-savedScroll=wrap.scrollLeft;
-savedModel=model;
-savedGeo=geo;
-savedMeta=$("#printMeta").textContent;
-$("#undated").style.display="none";
-if(!win){
-wrap.scrollLeft=0;
-const s=Math.min(1,PRINT.pageW/geo.width,PRINT.pageH/geo.height);
-canvas.style.zoom=String(s);
-wrap.style.height=`${Math.ceil(geo.height*s)}px`;
-wrap.style.width=`${Math.ceil(geo.width*s)}px`;
-return}
-const m=win.model,g=win.geo;
-for(const c of g.cards)c.x-=win.minX;
-for(const k of m.knots)k.x-=win.minX;
-for(const b of g.breaks)b.x-=win.minX;
-if(g.todayX!==null)g.todayX-=win.minX;
-g.width=win.w;
+pages.push(best);
+i+=best.n}
+return{all,pages}}
+function buildPrintPages(){
+const today=localTodayISO(),t=TL.isoDay(today),{all,pages}=paginate(today),legend=$(".legend")?.outerHTML||"";
+let host=$("#printPages");
+if(!host){
+host=document.createElement("div");
+host.id="printPages";
+$(".page").appendChild(host)}
+host.innerHTML="";
+const saveModel=model,saveGeo=geo;
+pages.forEach((pg,idx)=>{
+const m=pg.model,g=pg.geo,first=m.knots[0],last=m.knots.at(-1),next=all[pg.i+pg.n]||null,firstDay=TL.isoDay(first.date),lastDay=TL.isoDay(last.endDate||last.date);
+const showToday=(t>=firstDay&&t<=lastDay)||(t<firstDay&&idx===0)||(t>lastDay&&idx===pages.length-1);
+if(!showToday)g.todayX=null;
+for(const c of g.cards)c.x-=pg.minX;
+for(const k of m.knots)k.x-=pg.minX;
+for(const b of g.breaks)b.x-=pg.minX;
+if(g.todayX!==null)g.todayX-=pg.minX;
+g.width=pg.w;
+const sec=document.createElement("section");
+sec.className="print-page";
+sec.innerHTML=`<div class="print-head"><strong>Umzugsplanung Elektroabteilung – Zeitstrahl</strong><span>Seite ${idx+1} von ${pages.length}</span><span>Zeitraum ${esc(TL.fmtRange(first.date,last.endDate||last.date))}</span><span>${next?`weiter mit ${esc(TL.fmtRange(next.date,next.endDate))} auf Seite ${idx+2}`:"Ende des Plans"}</span><span>Datenstand ${esc(formatTime(data.updatedAt))} · gedruckt ${esc(TL.fmtLong(today))}</span>${legend}</div><div class="print-canvas-wrap"><div class="canvas"></div></div>`;
+host.appendChild(sec);
+const canvas=$(".canvas",sec),wrap=$(".print-canvas-wrap",sec);
 model=m;
 geo=g;
-renderCanvas();
-wrap.scrollLeft=0;
-canvas.style.zoom=String(win.s);
-wrap.style.height=`${Math.ceil(g.height*win.s)}px`;
-wrap.style.width=`${Math.ceil(g.width*win.s)}px`;
-const first=m.knots[0],last=m.knots.at(-1);
-$("#printMeta").textContent=`Datenstand ${formatTime(data.updatedAt)} · gedruckt ${TL.fmtLong(today)} · Zeitraum ${TL.fmtRange(first.date,last.endDate||last.date)} · ${win.next?`weiter mit ${TL.fmtRange(win.next.date,win.next.endDate)} am Bildschirm`:"Ende des Plans"}`}
+renderCanvas(canvas);
+canvas.style.zoom=String(pg.s);
+wrap.style.width=`${Math.ceil(g.width*pg.s)}px`;
+wrap.style.height=`${Math.ceil(g.height*pg.s)}px`}
+);
+model=saveModel;
+geo=saveGeo;
+return pages.length}
+function fitForPrint(){
+if(!data||!geo||printActive)return;
+printActive=true;
+savedScroll=$("#canvasScroll").scrollLeft;
+buildPrintPages();
+document.body.classList.add("printing")}
 function unfitPrint(){
 if(!printActive)return;
 printActive=false;
-const wrap=$("#canvasScroll"),canvas=$("#canvas");
-canvas.style.zoom="";
-wrap.style.height="";
-wrap.style.width="";
-$("#undated").style.display="";
-if(savedModel&&savedGeo){
-model=savedModel;
-geo=savedGeo;
-renderCanvas()}
-$("#printMeta").textContent=savedMeta;
-wrap.scrollLeft=savedScroll}
+document.body.classList.remove("printing");
+const host=$("#printPages");
+if(host)host.innerHTML="";
+renderAll();
+$("#canvasScroll").scrollLeft=savedScroll}
 
     $("#prevBtn").addEventListener("click",()=>jumpKnot(-1));
 $("#nextBtn").addEventListener("click",()=>jumpKnot(1));
