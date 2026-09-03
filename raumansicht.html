@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raumansicht wird geladen …</title>
+  <style>
+    body{margin:0;display:grid;place-items:center;min-height:100vh;background:#edf2f5;color:#61727f;font:14px/1.4 "Segoe UI",system-ui,sans-serif}
+  </style>
+</head>
+<body>
+  <div>Raumansicht wird geladen …</div>
+  <script>
+  (async()=>{
+    try{
+      const r=await fetch(`raumansicht-basis.html?ts=${Date.now()}`,{cache:"no-store"});
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      let html=await r.text();
+      html=html.replace('<title>Umzugsplanung Elektroabteilung – Version 2.0</title>','<title>Umzugsplanung Elektroabteilung – Raumansicht</title>');
+      html=html.replace('Heinz-Rühmann-Straße → Finninger Straße · V2.0','Heinz-Rühmann-Straße → Finninger Straße · Raumansicht');
+      html=html.replace('</style>','\n    .view-switch{display:inline-block;border:0;border-radius:8px;padding:9px 13px;background:transparent;color:#e6f3f2;font-weight:650;text-decoration:none}.view-switch:hover{background:rgba(255,255,255,.12)}\n    @media (min-width:1181px) and (max-height:1050px){.view-switch{padding:7px 11px}}\n  </style>');
+      html=html.replace(
+`    <nav class="main-nav" aria-label="Hauptnavigation">
+      <button class="nav-btn active" data-panel="view">Ansicht</button>
+      <button class="nav-btn" data-panel="audit">Änderungen</button>
+      <button class="nav-btn" data-panel="help">Bedienung</button>
+    </nav>`,
+`    <nav class="main-nav" aria-label="Hauptnavigation">
+      <a class="view-switch" href="index.html">Zeitstrahl</a>
+      <button class="nav-btn active" data-panel="view">Raumansicht</button>
+      <button class="nav-btn" data-panel="audit">Änderungen</button>
+      <button class="nav-btn" data-panel="help">Bedienung</button>
+    </nav>`);
+      document.open();document.write(html);document.close();
+    }catch(err){
+      document.body.innerHTML='<div style="max-width:620px;padding:24px">Die Raumansicht konnte nicht geladen werden. Bitte die Seite neu laden.</div>';
+      console.error(err);
+    }
+  })();
+  </script>
+</body>
+</html>
