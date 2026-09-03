@@ -17,6 +17,8 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 
 **03.09.2026**
 
+- Raumansicht Druck: Die am gewählten Stichtag als Nächstes anstehenden Ausstattungsbewegungen werden nun auch im Ausdruck orange hervorgehoben; die Drucklegende enthält „als Nächstes“. Bildschirmansicht und `data.json` unverändert.
+
 - Raumansicht Drucklayout geändert: Blatt 1 enthält ausschließlich FI-U1 bis FI-U9 im 3×3-Raster; Blatt 2 enthält Büro A1, Büro A2 und Küche/Nebenbereich. Bildschirmansicht und `data.json` unverändert.
 
 - Zeitstrahl V1.6: Druck ab Heute in `timeline-ui.js`. `beforeprint` baut ein Fenster aus den Knoten ab Heute (Zeiträume, die Heute noch enthalten, zählen mit): so viele Knoten, wie bei Maßstab ≥ 0,8 vollständig auf ein Blatt A3 quer passen (1500 × 1000 px bedruckbar angenommen), eigenes Layout für diese Teilmenge, kein Anschnitt, Maßstab höchstens 1,0. Kopfzeile: Datenstand, Druckdatum, Zeitraum, „weiter mit … am Bildschirm“. Ohne-Termin-Block wird nicht gedruckt. `afterprint` stellt Bildschirmfläche, Scrollposition und Kopfzeile wieder her. Stand heute: Blatt zeigt 03.–15.09. bei Maßstab 0,83. `data.json` unverändert.

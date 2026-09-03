@@ -109,6 +109,7 @@
       .print-heading{display:grid;grid-template-columns:minmax(0,1fr) 95mm;gap:5.5mm;align-items:end;margin:0 0 4mm;padding:0 0 3mm;border-bottom:.6mm solid #006b73}
       .print-heading h1{margin:0;font-size:18pt;line-height:1.05}.print-heading h2{margin:1.4mm 0 0;font-size:14pt;line-height:1.15}.print-heading p{margin:1.4mm 0 0;color:#34454e;font-size:10.5pt}.print-meta{width:95mm;text-align:right;white-space:nowrap;font-size:10pt;color:#34454e}
       .print-legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:1.7mm;margin-top:1.4mm;font-size:8.7pt}.print-legend span{display:inline-flex;align-items:center;gap:1.1mm;white-space:nowrap}.print-legend i{display:inline-block;flex:0 0 auto}
+      .asset-tile.next-up.future{opacity:1!important;border:1.5px solid #d59a3a!important;background:#fff8e9!important;color:#111!important}.asset-tile.next-up.future .asset-icon{background:#a97a32!important}.asset-tile.next-out.present{background:linear-gradient(90deg,#f4fbf8 0%,#f4fbf8 82%,#fff0cf 100%)!important}.print-legend .legend-swatch.next-up{opacity:1!important;background:#fff8e9!important;border:1.5px solid #d59a3a!important}
       .building-layout{display:block!important;height:auto!important;min-height:0!important}
       .rooms-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:3mm;height:248mm;break-after:page;page-break-after:always}
       .side-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto 1fr;gap:4mm;height:auto!important;min-height:0!important;align-items:start}
@@ -159,7 +160,7 @@
     <div class="page">
       <header class="print-heading">
         <div><h1>Umzugsplanung Elektroabteilung</h1><h2 id="printEventTitle"></h2><p id="printEventDetail"></p></div>
-        <div class="print-meta"><div id="printGenerated"></div><div class="print-legend"><span><i class="legend-swatch present"></i> fertig</span><span><i class="legend-swatch due"></i> Termin</span><span><i class="legend-swatch future"></i> später</span><span><i class="legend-swatch overdue"></i> überfällig</span><span><i class="legend-swatch conflict"></i> Konflikt</span><span>≈ geschätzt</span></div></div>
+        <div class="print-meta"><div id="printGenerated"></div><div class="print-legend"><span><i class="legend-swatch present"></i> fertig</span><span><i class="legend-swatch due"></i> Termin</span><span><i class="legend-swatch next-up"></i> als Nächstes</span><span><i class="legend-swatch future"></i> später</span><span><i class="legend-swatch overdue"></i> überfällig</span><span><i class="legend-swatch conflict"></i> Konflikt</span><span>≈ geschätzt</span></div></div>
       </header>
       <div class="view-toolbar">
         <div class="date-chip"><span class="sr-only">Gewähltes Datum</span><strong id="selectedDateLabel"></strong></div>
