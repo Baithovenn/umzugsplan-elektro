@@ -269,7 +269,11 @@ geo=g;
 renderCanvas(canvas);
 canvas.style.zoom=String(pg.s);
 wrap.style.width=`${Math.ceil(g.width*pg.s)}px`;
-wrap.style.height=`${Math.ceil(g.height*pg.s)}px`}
+wrap.style.height=`${Math.ceil(g.height*pg.s)}px`;
+// Achse auf allen Blättern möglichst auf gleicher Höhe (42 % der Blatthöhe), damit ein
+// dünn belegtes Blatt nicht oben klebt.
+const room=PRINT.pageH-g.height*pg.s,want=PRINT.pageH*.42-g.axisY*pg.s;
+wrap.style.marginTop=`${Math.round(Math.max(0,Math.min(room,want)))}px`}
 );
 model=saveModel;
 geo=saveGeo;
