@@ -1,0 +1,54 @@
+name: Next-up auch im Raumdruck orange
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-nextup-print.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Druckdarstellung anpassen
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p = Path('raumansicht.html')
+          s = p.read_text(encoding='utf-8')
+
+          css_anchor = '.print-legend i{display:inline-block;flex:0 0 auto}'
+          css_insert = css_anchor + '\n      .asset-tile.next-up.future{opacity:1!important;border:1.5px solid #d59a3a!important;background:#fff8e9!important;color:#111!important}.asset-tile.next-up.future .asset-icon{background:#a97a32!important}.asset-tile.next-out.present{background:linear-gradient(90deg,#f4fbf8 0%,#f4fbf8 82%,#fff0cf 100%)!important}.print-legend .legend-swatch.next-up{opacity:1!important;background:#fff8e9!important;border:1.5px solid #d59a3a!important}'
+          if css_anchor not in s:
+              raise SystemExit('CSS-Anker nicht gefunden')
+          if '.asset-tile.next-up.future{opacity:1!important' not in s:
+              s = s.replace(css_anchor, css_insert, 1)
+
+          legend_old = '<span><i class="legend-swatch present"></i> fertig</span><span><i class="legend-swatch due"></i> Termin</span><span><i class="legend-swatch future"></i> später</span>'
+          legend_new = '<span><i class="legend-swatch present"></i> fertig</span><span><i class="legend-swatch due"></i> Termin</span><span><i class="legend-swatch next-up"></i> als Nächstes</span><span><i class="legend-swatch future"></i> später</span>'
+          if legend_old not in s:
+              raise SystemExit('Drucklegende nicht gefunden')
+          s = s.replace(legend_old, legend_new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          a = Path('ARBEITSSTAND.md')
+          t = a.read_text(encoding='utf-8')
+          bullet = '- Raumansicht Druck: Die am gewählten Stichtag als Nächstes anstehenden Ausstattungsbewegungen werden nun auch im Ausdruck orange hervorgehoben; die Drucklegende enthält „als Nächstes“. Bildschirmansicht und `data.json` unverändert.\n'
+          marker = '**03.09.2026**\n\n'
+          if bullet not in t:
+              if marker not in t:
+                  raise SystemExit('Arbeitsstand-Marker nicht gefunden')
+              t = t.replace(marker, marker + bullet + '\n', 1)
+          a.write_text(t, encoding='utf-8')
+
+      - name: Änderungen committen
+        run: |
+          git config user.name "Baithovenn"
+          git config user.email "to.sauter@gmx.de"
+          git add raumansicht.html ARBEITSSTAND.md
+          git commit -m "Nächste Bewegungen auch im Raumdruck hervorheben"
+          git push
