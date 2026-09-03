@@ -109,10 +109,10 @@
       .print-heading{display:grid;grid-template-columns:minmax(0,1fr) 95mm;gap:5.5mm;align-items:end;margin:0 0 4mm;padding:0 0 3mm;border-bottom:.6mm solid #006b73}
       .print-heading h1{margin:0;font-size:18pt;line-height:1.05}.print-heading h2{margin:1.4mm 0 0;font-size:14pt;line-height:1.15}.print-heading p{margin:1.4mm 0 0;color:#34454e;font-size:10.5pt}.print-meta{width:95mm;text-align:right;white-space:nowrap;font-size:10pt;color:#34454e}
       .print-legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:1.7mm;margin-top:1.4mm;font-size:8.7pt}.print-legend span{display:inline-flex;align-items:center;gap:1.1mm;white-space:nowrap}.print-legend i{display:inline-block;flex:0 0 auto}
-      .building-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 71mm;gap:3mm;align-items:stretch;height:248mm}
-      .rooms-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:3mm;height:248mm}
-      .side-grid{display:grid!important;grid-template-columns:1fr;grid-template-rows:5.5mm repeat(3,minmax(0,1fr));gap:3mm;height:248mm}
-      .side-label{margin:0;font-size:9pt}
+      .building-layout{display:block!important;height:auto!important;min-height:0!important}
+      .rooms-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:3mm;height:248mm;break-after:page;page-break-after:always}
+      .side-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto 1fr;gap:4mm;height:auto!important;min-height:0!important;align-items:start}
+      .side-label{grid-column:1/-1;margin:0 0 2mm;padding:0 0 2mm;border-bottom:.6mm solid #006b73;color:#111;font-size:16pt;font-weight:800;letter-spacing:0;text-transform:none}
       .room-card,.room-card.side{min-height:0!important;height:auto;break-inside:avoid;box-shadow:none;border-radius:3mm;border-width:.4mm;border-top-width:1.4mm;overflow:hidden}
       .room-head{padding:1.4mm 1.8mm 1.1mm;gap:1.4mm}.room-kicker{font-size:8.2pt}.room-title{font-size:13.5pt}.room-owner{font-size:8.8pt;line-height:1.12}
       .room-use{display:none}
@@ -127,10 +127,10 @@
       body.print-a4 .print-heading{grid-template-columns:minmax(0,1fr) 67mm;gap:4mm;margin-bottom:3mm;padding-bottom:2mm;border-bottom-width:.5mm}
       body.print-a4 .print-heading h1{font-size:13pt}body.print-a4 .print-heading h2{margin-top:1mm;font-size:10pt}body.print-a4 .print-heading p{margin-top:1mm;font-size:7.5pt}body.print-a4 .print-meta{width:67mm;font-size:7pt}
       body.print-a4 .print-legend{gap:1.2mm;margin-top:1mm;font-size:6.2pt}body.print-a4 .print-legend span{gap:.8mm}
-      body.print-a4 .building-layout{grid-template-columns:minmax(0,1fr) 50mm;gap:2mm;height:174mm}
-      body.print-a4 .rooms-grid{gap:2mm;height:174mm}
-      body.print-a4 .side-grid{grid-template-rows:4mm repeat(3,minmax(0,1fr));gap:2mm;height:174mm}
-      body.print-a4 .side-label{font-size:6.5pt}
+      body.print-a4 .building-layout{height:auto!important;min-height:0!important}
+      body.print-a4 .rooms-grid{gap:2mm;height:174mm;break-after:page;page-break-after:always}
+      body.print-a4 .side-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto 1fr;gap:2mm;height:auto!important}
+      body.print-a4 .side-label{font-size:11pt}
       body.print-a4 .room-card,body.print-a4 .room-card.side{border-radius:2mm;border-width:.3mm;border-top-width:1mm}
       body.print-a4 .room-head{padding:1mm 1.3mm .8mm;gap:1mm}body.print-a4 .room-kicker{font-size:5.8pt}body.print-a4 .room-title{font-size:9.5pt}body.print-a4 .room-owner{font-size:6.2pt}
       body.print-a4 .room-items,body.print-a4 .room-card.side .room-items{padding:.8mm}
