@@ -311,7 +311,7 @@ a {
   border-radius:999px;
   background:var(--surface);
   color:var(--ink);
-  font-size:11px;
+  font-size:12.5px;
   font-weight:800;
   white-space:nowrap;
   z-index:3;
@@ -345,7 +345,7 @@ a {
   color:white;
   border-width:2px;
   height:22px;
-  font-size:10px
+  font-size:11px
 }
 .today-word {
   margin-right:6px;
@@ -353,7 +353,7 @@ a {
   border-radius:4px;
   background:var(--brand);
   color:white;
-  font-size:9.5px;
+  font-size:10.5px;
   letter-spacing:.02em
 }
 .card {
@@ -403,7 +403,8 @@ a {
   align-items:baseline;
   justify-content:space-between;
   gap:8px;
-  min-width:0
+  min-width:0;
+  line-height:1.25
 }
 .c-where {
   flex:1;
@@ -411,7 +412,7 @@ a {
   overflow:hidden;
   white-space:nowrap;
   text-overflow:ellipsis;
-  font-size:10.5px;
+  font-size:12px;
   font-weight:700;
   color:#44565f;
   letter-spacing:.01em
@@ -429,7 +430,7 @@ a {
 }
 .c-date {
   flex:0 0 auto;
-  font-size:10.5px;
+  font-size:12px;
   font-weight:700;
   color:#3e5560;
   white-space:nowrap
@@ -443,14 +444,14 @@ a {
   border-radius:3px;
   background:#bd7100;
   color:white;
-  font-size:8.5px;
+  font-size:9.5px;
   font-weight:800;
   vertical-align:1px
 }
 .c-title {
   display:-webkit-box;
   overflow:hidden;
-  font-size:12px;
+  font-size:14px;
   font-weight:750;
   line-height:1.22;
   -webkit-box-orient:vertical;
@@ -458,14 +459,14 @@ a {
 }
 .card.target.room .c-title {
   font-weight:600;
-  font-size:11.5px
+  font-size:13.5px
 }
 .c-meta {
   overflow:hidden;
   white-space:nowrap;
   text-overflow:ellipsis;
   color:var(--muted);
-  font-size:10.3px;
+  font-size:11.5px;
   line-height:1.25
 }
 .c-meta .empty {

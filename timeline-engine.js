@@ -4,7 +4,7 @@ const TL=(()=>{
     const dayMs=86400000,WD=["So","Mo","Di","Mi","Do","Fr","Sa"];
 
     const GEO={
-unit:100,minU:1,maxU:5,breakDays:14,breakU:3.2,x0:370,cardW:280,cardH:72,pitch:82,branchGap:48,gap:10,corridor:36,padTop:30,padBottom:26,padRight:56,pillHalf:12}
+unit:100,minU:1,maxU:5,breakDays:14,breakU:3.2,x0:370,cardW:280,cardH:80,pitch:90,branchGap:48,gap:10,corridor:36,padTop:30,padBottom:26,padRight:56,pillHalf:12}
 ;
 
     function isoDay(iso){
