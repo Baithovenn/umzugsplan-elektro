@@ -32,99 +32,79 @@ jobs:
           )
           assert n == 1, 'seed-data-Block nicht eindeutig gefunden'
 
-          old = '''    const seedElement = document.getElementById("seed-data");
-              const seed = JSON.parse(seedElement.textContent);
-              const printFormatKey = "ihk-umzugsplanung-elektro-v2-print-format";
-              const dayMs = 86400000;
-              let data = seed;'''
-          new = '''    const printFormatKey = "ihk-umzugsplanung-elektro-v2-print-format";
-              const dayMs = 86400000;
-              let data = null;'''
+          old = '    const seedElement = document.getElementById("seed-data");\n    const seed = JSON.parse(seedElement.textContent);\n'
           assert old in s, 'Seed-Initialisierung nicht gefunden'
-          s = s.replace(old, new, 1)
+          s = s.replace(old, '', 1)
+          assert '    let data = seed;' in s
+          s = s.replace('    let data = seed;', '    let data = null;', 1)
 
-          old = '''    <div class="page">
-              <header class="print-heading">'''
-          new = '''    <div class="page">
-              <section id="loadError" class="help-card" style="margin:0 0 14px">
-                <h3 id="loadErrorTitle">Aktueller Plan wird geladen …</h3>
-                <p id="loadErrorText">Die Raumansicht lädt den aktuellen Datenstand aus data.json.</p>
-                <button class="timeline-btn" id="reloadDataBtn" type="button" hidden>Neu laden</button>
-              </section>
-              <header class="print-heading">'''
-          assert old in s, 'Einfügepunkt für Ladehinweis nicht gefunden'
-          s = s.replace(old, new, 1)
+          error_box = '''      <section id="loadError" class="help-card" style="margin:0 0 14px">
+        <h3 id="loadErrorTitle">Aktueller Plan wird geladen …</h3>
+        <p id="loadErrorText">Die Raumansicht lädt den aktuellen Datenstand aus data.json.</p>
+        <button class="timeline-btn" id="reloadDataBtn" type="button" hidden>Neu laden</button>
+      </section>
+'''
+          s, n = re.subn(
+              r'(<section class="panel active" id="panel-view">\s*<div class="page">\s*)',
+              lambda m: m.group(1) + error_box,
+              s,
+              count=1,
+          )
+          assert n == 1, 'Einfügepunkt für Ladehinweis nicht gefunden'
 
           old = '        if(!remote || remote.schemaVersion !== seed.schemaVersion) return null;'
-          new = '        if(!remote || remote.schemaVersion !== 1) return null;'
           assert old in s, 'Schema-Prüfung gegen Seed nicht gefunden'
-          s = s.replace(old, new, 1)
+          s = s.replace(old, '        if(!remote || remote.schemaVersion !== 1) return null;', 1)
 
-          old = '''    async function refresh(initial=false){
-              const remote = await fetchRemote();
-              if(remote){
-                if(remote.updatedAt !== data.updatedAt){
-                  data = remote;
-                  renderAll();
-                  if(!initial) showToast(`Neuer Stand geladen: ${formatTime(data.updatedAt)}`);
-                }
-              } else if(initial && location.protocol !== "file:") {
-                showToast("Aktueller Stand nicht abrufbar — angezeigt wird der in der Datei eingebettete Stand.", true);
-              }
-            }'''
-          new = '''    function setLoadState(state){
-              const ready = state === "ready";
-              const loading = state === "loading";
-              const box = $("#loadError");
-              $$(".print-heading, .view-toolbar, .building-layout, .timeline-shell", $("#panel-view")).forEach(node => node.hidden = !ready);
-              $("#printBtn").disabled = !ready;
-              box.hidden = ready;
-              if(ready) return;
-              $("#loadErrorTitle").textContent = loading ? "Aktueller Plan wird geladen …" : "Aktueller Plan konnte nicht geladen werden";
-              $("#loadErrorText").textContent = loading
-                ? "Die Raumansicht lädt den aktuellen Datenstand aus data.json."
-                : "Es wird bewusst kein veralteter eingebetteter Plan angezeigt. Datenstand: nicht verfügbar.";
-              $("#reloadDataBtn").hidden = loading;
-              $("#systemDate").textContent = formatDate(localTodayISO());
-              $("#dataTimestamp").textContent = loading ? "wird geladen …" : "nicht geladen";
-            }
+          refresh_new = '''    function setLoadState(state){
+      const ready = state === "ready";
+      const loading = state === "loading";
+      const box = $("#loadError");
+      $$(".print-heading, .view-toolbar, .building-layout, .timeline-shell", $("#panel-view")).forEach(node => node.hidden = !ready);
+      $("#printBtn").disabled = !ready;
+      box.hidden = ready;
+      if(ready) return;
+      $("#loadErrorTitle").textContent = loading ? "Aktueller Plan wird geladen …" : "Aktueller Plan konnte nicht geladen werden";
+      $("#loadErrorText").textContent = loading
+        ? "Die Raumansicht lädt den aktuellen Datenstand aus data.json."
+        : "Es wird bewusst kein veralteter eingebetteter Plan angezeigt. Datenstand: nicht verfügbar.";
+      $("#reloadDataBtn").hidden = loading;
+      $("#systemDate").textContent = formatDate(localTodayISO());
+      $("#dataTimestamp").textContent = loading ? "wird geladen …" : "nicht geladen";
+    }
 
-            async function refresh(initial=false){
-              const remote = await fetchRemote();
-              if(remote){
-                const changed = !data || remote.updatedAt !== data.updatedAt;
-                data = remote;
-                if(changed || initial) renderAll();
-                setLoadState("ready");
-                if(!initial && changed) showToast(`Neuer Stand geladen: ${formatTime(data.updatedAt)}`);
-                return;
-              }
-              if(!data){
-                setLoadState("error");
-              } else if(!initial) {
-                showToast(`Aktualisierung fehlgeschlagen — angezeigt bleibt Datenstand ${formatTime(data.updatedAt)}.`, true);
-              }
-            }'''
-          assert old in s, 'refresh-Block nicht gefunden'
-          s = s.replace(old, new, 1)
+    async function refresh(initial=false){
+      const remote = await fetchRemote();
+      if(remote){
+        const changed = !data || remote.updatedAt !== data.updatedAt;
+        data = remote;
+        if(changed || initial) renderAll();
+        setLoadState("ready");
+        if(!initial && changed) showToast(`Neuer Stand geladen: ${formatTime(data.updatedAt)}`);
+        return;
+      }
+      if(!data){
+        setLoadState("error");
+      } else if(!initial) {
+        showToast(`Aktualisierung fehlgeschlagen — angezeigt bleibt Datenstand ${formatTime(data.updatedAt)}.`, true);
+      }
+    }'''
+          pattern = r'    async function refresh\(initial=false\)\{.*?\n    \}\n\n(?=    \$\$\("\\\.nav-btn")'
+          s, n = re.subn(pattern, refresh_new + '\n\n', s, count=1, flags=re.S)
+          if n != 1:
+              # Fallback: bis zur nächsten nav-btn-Bindung ersetzen, ohne den Lookahead zu überkomplizieren.
+              start = s.find('    async function refresh(initial=false){')
+              marker = s.find('    $$(".nav-btn")', start)
+              assert start >= 0 and marker > start, 'refresh-Block nicht gefunden'
+              s = s[:start] + refresh_new + '\n\n' + s[marker:]
 
-          old = '''    $("#printFormatSelect").addEventListener("change",event=>applyPrintFormat(event.target.value));
-              window.addEventListener("beforeprint",()=>applyPrintFormat($("#printFormatSelect").value));
-              $("#printBtn").addEventListener("click",()=>{hidePopover();applyPrintFormat($("#printFormatSelect").value);window.print()});
+          print_line = '    $("#printBtn").addEventListener("click",()=>{hidePopover();applyPrintFormat($("#printFormatSelect").value);window.print()});'
+          assert print_line in s, 'Print-Bindung nicht gefunden'
+          s = s.replace(print_line, print_line + '\n    $("#reloadDataBtn").addEventListener("click",()=>{setLoadState("loading");refresh(true)});', 1)
 
-              applyPrintFormat(printFormat);
-              renderAll();
-              refresh(true);'''
-          new = '''    $("#printFormatSelect").addEventListener("change",event=>applyPrintFormat(event.target.value));
-              window.addEventListener("beforeprint",()=>applyPrintFormat($("#printFormatSelect").value));
-              $("#printBtn").addEventListener("click",()=>{hidePopover();applyPrintFormat($("#printFormatSelect").value);window.print()});
-              $("#reloadDataBtn").addEventListener("click",()=>{setLoadState("loading");refresh(true)});
-
-              applyPrintFormat(printFormat);
-              setLoadState("loading");
-              refresh(true);'''
+          old = '    applyPrintFormat(printFormat);\n    renderAll();\n    refresh(true);'
           assert old in s, 'Startsequenz nicht gefunden'
-          s = s.replace(old, new, 1)
+          s = s.replace(old, '    applyPrintFormat(printFormat);\n    setLoadState("loading");\n    refresh(true);', 1)
 
           assert 'seed-data' not in s, 'seed-data ist noch vorhanden'
           assert 'let data = null;' in s
