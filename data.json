@@ -2,7 +2,7 @@
  "schemaVersion": 1,
  "appVersion": "2.0",
  "actor": "Sauter",
- "updatedAt": "2026-09-03T06:49:53Z",
+ "updatedAt": "2026-09-04T05:29:52Z",
  "categories": [
   {
    "id": "display",
@@ -595,6 +595,7 @@
    "date": "",
    "endDate": "",
    "status": "planned",
+   "timelineLane": "source",
    "responsible": "offen",
    "affectedRooms": [
     "FI-U8"
@@ -684,6 +685,7 @@
    "date": "2026-09-22",
    "endDate": "",
    "status": "planned",
+   "timelineLane": "source",
    "responsible": "offen",
    "affectedRooms": [
     "FI-A1",
@@ -1876,6 +1878,11 @@
   }
  ],
  "audit": [
+  {
+   "at": "2026-09-04T05:29:52Z",
+   "actor": "Sauter",
+   "text": "Zeitstrahl: „Alle Büros umzugsbereit“ und „ELABO-Prüfung U8“ per timelineLane fest auf die obere Seite (Voraussetzungen) gelegt. Keine inhaltliche Änderung an Terminen oder Ausstattung."
+  },
   {
    "at": "2026-09-03T06:49:53Z",
    "actor": "Sauter",
