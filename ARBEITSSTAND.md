@@ -15,6 +15,12 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 
 ## Letzter Stand
 
+**04.09.2026**
+
+- Zeitstrahl-Lanes fachlich korrigiert: `ev_offices_ready` („Alle Büros umzugsbereit“) und `ev_u8_elabo` („ELABO-Prüfung U8“) sind per `timelineLane:"source"` fest der oberen Voraussetzung-/Quellseite zugeordnet. Die Änderung ist in `data.json` mit `updatedAt` und Audit dokumentiert.
+- Veralteten eingebetteten Daten-Fallback aus `raumansicht.html` vollständig entfernt. Die Raumansicht startet ohne Ersatzdaten und rendert erst nach erfolgreichem Laden von `data.json`; beim ersten Abruffehler erscheint ein deutlicher Hinweis „Aktueller Plan konnte nicht geladen werden“ mit Neu-laden-Knopf. Drucken bleibt bis zum erfolgreichen Laden deaktiviert. Scheitert nur eine spätere Aktualisierung, bleibt der bereits geladene Datenstand sichtbar und wird mit seinem Zeitstempel benannt.
+- README auf den zentralen Datenstand ohne Fallback angepasst. Temporäre Patch-Workflows wurden nach der Änderung wieder entfernt.
+
 **03.09.2026**
 
 - Raumansicht Druck: Die am gewählten Stichtag als Nächstes anstehenden Ausstattungsbewegungen werden nun auch im Ausdruck orange hervorgehoben; die Drucklegende enthält „als Nächstes“. Bildschirmansicht und `data.json` unverändert.
@@ -29,7 +35,7 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 - Vertikales Draggen im Zeitstrahl wieder entfernt: Drag auf freier Zeitfläche verschiebt nur horizontal den Zeitstrahl. Vertikal wird wieder normal über Mausrad/Touchpad bzw. Seiten-Scroll gescrollt. Karten und Bedienelemente bleiben klickbar.
 - Ansichten neu geordnet: `index.html` ist jetzt die Hauptansicht Zeitstrahl; die bisherige Raumansicht ist über `raumansicht.html` erreichbar. Beide sichtbaren Ansichten haben eine Navigation `Zeitstrahl | Raumansicht`; Änderungen/Bedienung bleiben in der Raumansicht erhalten.
 - Zeitstrahl V1.1: obere Karten liegen links vor ihrem Datumsknoten und laufen über weiche Kurven organisch auf ihn zu; untere FI-Karten liegen rechts hinter dem Knoten und laufen vom Knoten weg. Linker Vorlauf vergrößert, Heute wird beim Laden etwa im linken Viertel des sichtbaren Bereichs positioniert. Nicht-FI-Ziele wie Baumgartenstraße/Verschrottung werden auf der Quellseite dargestellt; bei betroffenen FI-Räumen ohne Move steht der Raumzustand statt pauschal „keine Ausstattung eingetragen“.
-- Zeitstrahl V1 angelegt (Fischgräte). Regeln: ein Knoten je Starttag, Beschriftung „von–bis" wenn Ereignisse dort ein `endDate` haben; Abstände 1–5 Einheiten je nach Tagesdifferenz, ab 15 Tagen Zeitbruch; oben eine Karte je Ereignis (Quellseite), unten eine Karte je Termin × Zielraum aus allen Bewegungen dieses Termins; stornierte Ereignisse und Bewegungen werden nicht gezeigt; „Noch ohne Termin" mit Ereigniskarten und aggregierter Ausstattung. Seite oben/unten per Heuristik, `timelineLane` wird gelesen, ist aber noch nirgends gesetzt. Druck A3 quer als Fit-to-width, dadurch klein; schmale Bildschirme bekommen eine senkrechte Liste.
+- Zeitstrahl V1 angelegt (Fischgräte). Regeln: ein Knoten je Starttag, Beschriftung „von–bis" wenn Ereignisse dort ein `endDate` haben; Abstände 1–5 Einheiten je nach Tagesdifferenz, ab 15 Tagen Zeitbruch; oben eine Karte je Ereignis (Quellseite), unten eine Karte je Termin × Zielraum aus allen Bewegungen dieses Termins; stornierte Ereignisse und Bewegungen werden nicht gezeigt; „Noch ohne Termin" mit Ereigniskarten und aggregierter Ausstattung. Seite oben/unten per Heuristik, `timelineLane` wird gelesen, ist aber zu diesem Stand noch nirgends gesetzt. Druck A3 quer als Fit-to-width, dadurch klein; schmale Bildschirme bekommen eine senkrechte Liste.
 - Sicherheitsstand vor der Terminplan-Aktualisierung als Branch `backup-2026-09-03-vor-terminupdate` gesichert (Stand `0708272`).
 - Aktuellen abgestimmten Terminplan für FI/HRS eingearbeitet: Räume 1–4, Grundreinigung, Umzugswelle 14.–15.09., F7, F8, Büros und späte Umzugsphase ab 26.10.
 - FI-U5/FI-U6 korrigiert: 12 Tische aus HR-U4 nach F5, 9 Tische aus HR-U11 nach F6; Industrie 4.0 nach F6. Dozententische und Clevertouch-Zuordnung F5/F6 bleiben wie geplant.
@@ -45,7 +51,7 @@ Diese Datei ist die kurze Übergabe für die nächste Bearbeitung am Repository.
 - Projekt auf GitHub und GitHub Pages umgestellt.
 - `index.html` als reiner Viewer in Version 2.0 angelegt (später am 03.09. zur Raumansicht ausgelagert).
 - `data.json` als zentralen Datenbestand eingerichtet.
-- Viewer lädt den aktuellen Stand aus `data.json`; ein eingebetteter Stand dient als Fallback.
+- Viewer lädt den aktuellen Stand aus `data.json`; ein eingebetteter Stand diente zu diesem Zeitpunkt als Fallback.
 - `README.md` mit Zweck, Rollen und Pflegeregeln ergänzt.
 - `.nojekyll` für GitHub Pages angelegt.
 - Diese Datei `ARBEITSSTAND.md` als kurze Übergabe für künftige Bearbeitungen ergänzt.
